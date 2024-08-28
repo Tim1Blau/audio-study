@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum AudioConfiguration
 {
@@ -9,27 +11,27 @@ public enum AudioConfiguration
 }
 
 [Serializable]
-public struct StudyData
+public record StudyData
 {
     public AudioConfiguration audioConfiguration;
-    public NavigationsForScene[] navigationTasks;
-    public LocalizationsForScene[] localizationTasks;
+    [FormerlySerializedAs("navigationTasks")] public List<NavigationScenario> navigationScenarios;
+    public List<LocalizationsForScene> localizationTasks;
 }
 
 [Serializable]
-public struct Scene
+public record Scene
 {
-    public string id;
+    public string name;
 }
 
 [Serializable]
-public struct LocalizationsForScene
+public record LocalizationsForScene
 {
     public Scene scene;
-    public LocalizeAudioTask[] tasks;
+    public List<LocalizeAudioTask> tasks;
 
     [Serializable]
-    public struct LocalizeAudioTask
+    public record LocalizeAudioTask
     {
         public float startTime;
         public float endTime;
@@ -39,27 +41,27 @@ public struct LocalizationsForScene
 }
 
 [Serializable]
-public struct NavigationsForScene
+public record NavigationScenario
 {
     public Scene scene;
-    public NavigateToAudioTask[] tasks;
+    public List<Task> tasks;
 
     [Serializable]
-    public struct NavigateToAudioTask
+    public record Task
     {
         public float startTime;
         public float endTime;
         public Vector2 audioPosition;
-        public MetricsFrame[] metrics;
+        public List<MetricsFrame> metrics;
 
         [Serializable]
-        public struct MetricsFrame
+        public record MetricsFrame
         {
             public float time;
             public Vector2 position;
             public Vector2 rotation;
 
-            public Vector2[] audioPath;
+            public List<Vector2> audioPath;
             // CALCULATED: Velocity, LastAudioPath, Efficiency
         }
     }

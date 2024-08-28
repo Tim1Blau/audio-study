@@ -16,8 +16,17 @@ public static class ExportPaths
     public static string Probes => SceneManager.GetActiveScene().path[..^".asset".Length] + "_Probes.asset";
 }
 
+public static class Utils
+{
+    public static Vector2 XZ(this Vector3 v) => new(v.x, v.z);
+    public static Vector3 XZ(this Vector2 v, float y = 0f) => new(v.x, y, v.y);
+}
+
 public class AudioPositioner : MonoBehaviour
 {
+    [Header("Study Parameters")]
+    [SerializeField] private AudioConfiguration audioConfiguration = AudioConfiguration.Pathing;
+
     [Header("Source Parameters")]
     [SerializeField] int numSourcesToFind = 10;
 
@@ -44,13 +53,31 @@ public class AudioPositioner : MonoBehaviour
 
     static float Now => Time.realtimeSinceStartup;
 
-    internal StudyData _data;
+    internal StudyData Data;
 
     void Start()
     {
         steamAudioSource.pathingProbeBatch = probeBatch;
         _audioSource = steamAudioSource.GetComponent<AudioSource>();
         _audioPositions = GetRandomPositions(seed);
+        switch (audioConfiguration)
+        {
+            case AudioConfiguration.Basic:
+                break;
+            case AudioConfiguration.Pathing:
+                break;
+            case AudioConfiguration.Mixed:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        Data = new StudyData
+        {
+            audioConfiguration = audioConfiguration,
+            navigationScenarios = new(),
+            localizationTasks = new()
+        };
         StartCoroutine(StudyLoop());
         StartCoroutine(EfficiencyLoop());
         return;
@@ -73,11 +100,26 @@ public class AudioPositioner : MonoBehaviour
         var startTime = Now;
 
         var toFind = new Stack<Vector3>(_audioPositions);
+
+        Data.navigationScenarios.Add(new NavigationScenario
+        {
+            scene = new Scene { name = SceneManager.GetActiveScene().name },
+            tasks = new List<NavigationScenario.Task>()
+        });
         while (toFind.Count > 0)
         {
             AudioPosition = toFind.Pop();
             var objectiveText = $"Find audio source {numSourcesToFind - toFind.Count}/{numSourcesToFind}";
             yield return Prompt(objectiveText);
+
+            Data.navigationScenarios.Last().tasks.Add(new NavigationScenario.Task
+            {
+                startTime = Now,
+                endTime = -1,
+                audioPosition = new Vector2(AudioPosition.x, AudioPosition.y),
+                metrics = new()
+            });
+
 
             sideText.text = objectiveText;
             yield return new WaitUntil(() => HasFoundSource || (Application.isEditor && Input.GetKeyDown(KeyCode.R)));
@@ -86,6 +128,7 @@ public class AudioPositioner : MonoBehaviour
             newPos.y = ListenerPosition.y;
             ListenerPosition = newPos;
             Message("Found source!");
+            Data.navigationScenarios.Last().tasks.Last().endTime = Now;
         }
 
         var result = $"Found all sources in {Now - startTime:0.0} seconds";
@@ -94,50 +137,83 @@ public class AudioPositioner : MonoBehaviour
         yield return Prompt(result);
     }
 
-    struct Path
-    {
-        public Vector3 From, To;
-    }
-
-    Path? _lastAudioPath = null;
+    List<(Vector3 From, Vector3 To)> _currentAudioPath = new();
 
     IEnumerator EfficiencyLoop()
     {
-        SteamAudioManager.Singleton.PathingVisCallback += (from, to, _, _) =>
-            _lastAudioPath ??= new Path { From = Common.ConvertVector(from), To = Common.ConvertVector(to) };
+        SteamAudioManager.Singleton.PathingVisCallback +=
+            (from, to, _, _) => _currentAudioPath.Add((Common.ConvertVector(from), Common.ConvertVector(to)));
 
         while (Application.isPlaying)
         {
-            _lastAudioPath = null;
+            _currentAudioPath.Clear();
             var prevListenerPosition = ListenerPosition;
 
             // wait for `PathingVisCallback` to set `lastAudioPath`
             yield return new WaitForSeconds(SteamAudioSettings.Singleton.simulationUpdateInterval);
+
             if (Paused)
             {
                 yield return new WaitWhile(() => Paused);
                 continue;
             }
+            
+            // Calculate Efficiency
+            var audioPath = new List<Vector2>();
 
-            if (_lastAudioPath is null)
+            if (_currentAudioPath.Count > 0)
             {
-                if (Physics.RaycastAll(ListenerPosition, AudioPosition)
+                _currentAudioPath.Reverse();
+                // prune alternative paths
+                var first = _currentAudioPath[0];
+                var lastNonRepeatedIndex = 1 + _currentAudioPath.Skip(1).TakeWhile(x => first.From != x.From).Count();
+                if (lastNonRepeatedIndex < _currentAudioPath.Count)
+                    _currentAudioPath = _currentAudioPath.GetRange(0, lastNonRepeatedIndex);
+
+                // replace approximate last position with actual listener position
+                _currentAudioPath[^1] = (_currentAudioPath[^1].From, ListenerPosition);
+                
+                // transform to compact version
+                audioPath.AddRange(
+                    _currentAudioPath.Select(x => x.To).Prepend(_currentAudioPath[0].From).Select(x => x.XZ())
+                );
+            }
+            else
+            {
+                audioPath.Add(AudioPosition.XZ());
+                audioPath.Add(ListenerPosition.XZ());
+                if (Physics.RaycastAll(ListenerPosition, AudioPosition - ListenerPosition)
                     .Any(h => h.transform.TryGetComponent<SteamAudioStaticMesh>(out _))) Debug.LogWarning("No path!?");
             }
 
-            var optimalPath = _lastAudioPath ?? new Path { From = AudioPosition, To = ListenerPosition };
+            var pre = audioPath.First();
+            foreach (var next in audioPath.Skip(1))
+            {
+                const float y = 3.0f;
+                Debug.DrawLine(pre.XZ(y), next.XZ(y), Color.magenta, 0.1f, true);
+                pre = next;
+            }
 
-            var optimalPathDir = ListenerPosition - optimalPath.From;
-            var moveDir = ListenerPosition - prevListenerPosition;
-
-            var angle = Vector3.Angle(-optimalPathDir, moveDir);
+            var optimalPathDir = audioPath[^1] - audioPath[^2];
+            var moveDir = (ListenerPosition - prevListenerPosition).XZ();
+            
+            var angle = Vector2.Angle(-optimalPathDir, moveDir);
             var efficiency = 1 - angle / 180f;
             if (moveDir.magnitude < 0.1f) efficiency = 0.5f;
-
+            
             sideText.text = $"Efficiency: {2 * (efficiency - 0.5):P}";
             Debug.Log($"Efficiency: {efficiency:P}");
             Debug.DrawLine(prevListenerPosition, ListenerPosition, new Color(1 - efficiency, efficiency, 0), 30f, true);
-            Debug.DrawLine(optimalPath.From, ListenerPosition, Color.blue, 0.1f, true);
+
+            var cam = listener.transform.GetComponentInChildren<Camera>();
+            var rotation = cam ? cam.transform.rotation.eulerAngles : Vector3.zero;
+            Data.navigationScenarios.Last().tasks.Last().metrics.Add(new NavigationScenario.Task.MetricsFrame
+            {
+                time = Now,
+                position = ListenerPosition.XZ(),
+                rotation = new Vector2(rotation.y, rotation.x),
+                audioPath = audioPath
+            });
         }
     }
 
@@ -187,10 +263,10 @@ public class AudioPositioner : MonoBehaviour
         }
     }
 
-    List<Vector3> GetRandomPositions(int seed)
+    List<Vector3> GetRandomPositions(int randomSeed)
     {
         var result = new List<Vector3>();
-        Random.InitState(seed);
+        Random.InitState(randomSeed);
 
         var possiblePositions = probeBatch.ProbeSpheres
             .Select(p => p.center)

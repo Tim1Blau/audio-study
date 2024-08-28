@@ -227,7 +227,8 @@ namespace SteamAudio
 
         ~SteamAudioSource()
         {
-            mThis.Free();
+            if(mThis.IsAllocated) // CHANGED CODE 
+                mThis.Free();
         }
 
         private void OnEnable()
