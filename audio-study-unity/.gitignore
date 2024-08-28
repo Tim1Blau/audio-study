@@ -1,0 +1,115 @@
+# =============== #
+# Unity generated #
+# =============== #
+[Tt]emp/
+[Oo]bj/
+[Bb]uild
+/[Bb]uilds/
+/[Ll]ibrary/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+sysinfo.txt
+*.stackdump
+/Assets/AssetStoreTools*
+*.apk
+*.unitypackage
+/Packages/packages-lock.json
+ 
+# ===================================== #
+# Visual Studio / MonoDevelop generated #
+# ===================================== #
+[Ee]xported[Oo]bj/
+.vs/
+/*.userprefs
+/*.csproj
+/*.pidb
+*.pidb.meta
+/*.suo
+/*.sln*
+/*.user
+/*.unityproj
+/*.booproj
+.consulo/
+/*.tmp
+/*.svd
+ 
+# ============ #
+# OS generated #
+# ============ #
+.DS_Store*
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Tt]humbs.db
+[Dd]esktop.ini
+Corridor/Library/ShaderCache/
+Corridor/Library/metadata/
+
+# =================== #
+# SonarQube generated #
+# =================== #
+
+.scannerwork
+.sonarqube
+
+Recordings/
+
+# ========= #
+# JetBrains #
+# ========= #
+
+# Picked from https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+# which covers gitignore for most JetBrains applications
+
+# Project-based
+Assets/Plugins/Editor/JetBrains/
+Assets/Plugins/Editor/JetBrains.meta
+Assets/Plugins/Editor.meta
+bii-sandbox-unity-project.sln.DotSettings.user
+
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# Generated files
+.idea/**/contentModel.xml
+.idea/**/indexLayout.xml
+
+
+# Sensitive or high-churn files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+.idea/**/riderModule.iml
+
+# File-based project format
+*.iws
+
+# Explicitly keep team-shared settings
+!bii-sandbox-unity-project.sln.DotSettings
+
+# Rider Unity plugin (installed by rider anyway, only causes merge conflicts)
+Assets/Resources/Prefabs/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll
+Assets/Resources/Prefabs/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll.meta
+
+# Ignore ever changing API.meta
+Assets/APIs.meta
+
+# Ignored AddressableAsset binaries
+Assets/AddressableAssetsData/Android
+Assets/AddressableAssetsData/Android.meta
+Assets/AddressableAssetsData/Windows
+Assets/AddressableAssetsData/Windows.meta
+
+# Code coverage generated
+CodeCoverage/**
