@@ -26,6 +26,7 @@ public class AudioPositioner : MonoBehaviour
 
     [Header("Utility Parameters")]
     [SerializeField] float foundSourceDistance = 1.0f;
+
     [SerializeField] float pressToConfirmSeconds = 0.5f;
 
     [Header("References")]
@@ -42,6 +43,8 @@ public class AudioPositioner : MonoBehaviour
     bool HasFoundSource => Vector3.Distance(ListenerPosition, AudioPosition) < foundSourceDistance;
 
     static float Now => Time.realtimeSinceStartup;
+
+    internal StudyData _data;
 
     void Start()
     {
