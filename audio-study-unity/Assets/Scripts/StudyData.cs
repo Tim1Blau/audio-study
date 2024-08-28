@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum AudioConfiguration
@@ -7,50 +8,58 @@ public enum AudioConfiguration
     Mixed // Pathing & Transmission 
 }
 
+[Serializable]
 public struct StudyData
 {
-    public AudioConfiguration AudioConfiguration;
-    public NavigationsForScene[] NavigationTasks;
-    public LocalizationsForScene[] LocalizationTasks;
+    public AudioConfiguration audioConfiguration;
+    public NavigationsForScene[] navigationTasks;
+    public LocalizationsForScene[] localizationTasks;
 }
 
+[Serializable]
 public struct Scene
 {
-    public int SceneID;
+    public string id;
 }
 
+[Serializable]
 public struct LocalizationsForScene
 {
-    public Scene Scene;
-    public LocalizeAudioTask[] Tasks;
+    public Scene scene;
+    public LocalizeAudioTask[] tasks;
+
+    [Serializable]
     public struct LocalizeAudioTask
     {
-        public float StartTime;
-        public float EndTime;
-        public Vector2 AudioPosition;
-        public Vector2 UserLocalizationPosition;
+        public float startTime;
+        public float endTime;
+        public Vector2 audioPosition;
+        public Vector2 userLocalizationPosition;
     }
 }
 
+[Serializable]
 public struct NavigationsForScene
 {
-    public Scene Scene;
-    public NavigateToAudioTask[] Tasks;
-    
+    public Scene scene;
+    public NavigateToAudioTask[] tasks;
+
+    [Serializable]
     public struct NavigateToAudioTask
     {
-        public float StartTime;
-        public float EndTime;
-        public Vector2 AudioPosition;
-        public MetricsFrame[] Metrics;
-        
+        public float startTime;
+        public float endTime;
+        public Vector2 audioPosition;
+        public MetricsFrame[] metrics;
+
+        [Serializable]
         public struct MetricsFrame
         {
-            public float Time;
-            public Vector2 Position;
-            public Vector2 Rotation;
+            public float time;
+            public Vector2 position;
+            public Vector2 rotation;
 
-            public Vector2[] AudioPath;
+            public Vector2[] audioPath;
             // CALCULATED: Velocity, LastAudioPath, Efficiency
         }
     }
