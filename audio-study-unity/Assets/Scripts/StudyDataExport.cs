@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -39,7 +40,8 @@ public static class JsonData
         Debug.Log("Exported Data!");
     }
 
-    public static StudyData? Import(string path = DefaultPath)
+    [CanBeNull]
+    public static StudyData Import(string path = DefaultPath)
     {
         if (!File.Exists(path))
         {
