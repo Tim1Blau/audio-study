@@ -65,7 +65,7 @@ public class Study : MonoBehaviour
         var scenario = new NavigationScenario
         {
             scene = new Scene { name = SceneManager.GetActiveScene().name },
-            tasks = new List<NavigationScenario.Task>()
+            tasks = { }
         };
         data.navigationScenarios.Add(scenario);
         var index = 0;
@@ -84,7 +84,7 @@ public class Study : MonoBehaviour
                 startTime = References.Now,
                 endTime = -1,
                 audioPosition = References.AudioPosition.XZ(),
-                metrics = new()
+                metrics = { }
             };
 
             scenario.tasks.Add(task);
