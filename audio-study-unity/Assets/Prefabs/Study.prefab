@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 3566103729904360118}
   - component: {fileID: 2067924861985369120}
   m_Layer: 0
-  m_Name: Audio Manager
+  m_Name: Study
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -14,7 +14,7 @@ public enum AudioConfiguration
 public record StudyData
 {
     public AudioConfiguration audioConfiguration;
-    [FormerlySerializedAs("navigationTasks")] public List<NavigationScenario> navigationScenarios;
+    public List<NavigationScenario> navigationScenarios;
     public List<LocalizationsForScene> localizationTasks;
 }
 
@@ -64,13 +64,5 @@ public record NavigationScenario
             public List<Vector2> audioPath;
             // CALCULATED: Velocity, LastAudioPath, Efficiency
         }
-    }
-}
-
-// Compiler fix for records
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit
-    {
     }
 }

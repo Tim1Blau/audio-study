@@ -52,3 +52,12 @@ public static class Utils
         Vector3 RandomIndex(Vector3[] l) => l[Random.Range(0, l.Length - 1)]; // Note: ignore empty case
     }
 }
+
+
+// Compiler fix for records
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit
+    {
+    }
+}

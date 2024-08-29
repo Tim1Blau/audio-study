@@ -11,10 +11,10 @@ public class StudyDataExport : MonoBehaviour
     static void ExportData()
     {
         if (SceneManager.GetActiveScene()
-                .GetRootGameObjects().Select(o => o.GetComponent<AudioPositioner>())
+                .GetRootGameObjects().Select(o => o.GetComponent<Study>())
                 .FirstOrDefault(x => x != null) is not { } singleton)
         {
-            Debug.LogError($"Can't Export Study Data: No {nameof(AudioPositioner)} found.");
+            Debug.LogError($"Can't Export Study Data: No {nameof(Study)} found.");
             return;
         }
 

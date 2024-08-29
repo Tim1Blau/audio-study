@@ -2,15 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using SteamAudio;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
-using Random = UnityEngine.Random;
 using Vector3 = UnityEngine.Vector3;
 
 [RequireComponent(typeof(References), typeof(UI))]
-public class AudioPositioner : MonoBehaviour
+public class Study : MonoBehaviour
 {
     [Header("Study Parameters")]
     [SerializeField] AudioConfiguration audioConfiguration = AudioConfiguration.Pathing;
@@ -57,7 +54,7 @@ public class AudioPositioner : MonoBehaviour
         IEnumerator StudyLoop()
         {
             while (Application.isPlaying)
-                yield return Study();
+                yield return DoStudy();
         }
     }
 
@@ -101,7 +98,7 @@ public class AudioPositioner : MonoBehaviour
         }
     }
 
-    IEnumerator Study()
+    IEnumerator DoStudy()
     {
         /*------------------------------------------------*/
         yield return WaitForPrompt("Welcome to the Study");

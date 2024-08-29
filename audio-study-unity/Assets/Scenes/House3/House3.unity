@@ -350,7 +350,7 @@ PrefabInstance:
       objectReference: {fileID: -3830088086820059559, guid: 3afc831d048315c409e75ed8d19f9f71, type: 3}
     - target: {fileID: 2592597141603480103, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Name
-      value: Audio Manager
+      value: Study
       objectReference: {fileID: 0}
     - target: {fileID: 3609440916337121874, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_UiScaleMode
