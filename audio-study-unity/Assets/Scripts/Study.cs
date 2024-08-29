@@ -93,10 +93,10 @@ public class Study : MonoBehaviour
             yield return new WaitUntil(() => HasFoundSource || (Application.isEditor && Input.GetKeyDown(KeyCode.R)));
             /*------------------------------------------------*/
 
-            Message("Found source!");
+            task.endTime = References.Now;
             StopCoroutine(recording);
-            data.navigationScenarios.Last().tasks.Last().endTime = References.Now;
             References.ListenerPosition = References.AudioPosition.XZ().XZ(References.ListenerPosition.y);
+            Message("Found source!");
         }
     }
 
