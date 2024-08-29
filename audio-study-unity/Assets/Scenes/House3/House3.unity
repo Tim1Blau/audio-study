@@ -336,6 +336,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: -3830088086820059559, guid: 3afc831d048315c409e75ed8d19f9f71, type: 3}
+    - target: {fileID: 1534806201570636485, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: pathingProbeBatch
+      value: 
+      objectReference: {fileID: 6214560998789036136}
     - target: {fileID: 1682409464593420310, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
@@ -8053,6 +8057,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+--- !u!114 &6214560998789036136 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5352515755240828550, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+  m_PrefabInstance: {fileID: 6214560998789036135}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286962cac82a4fa4e9ec38ab663c9578, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

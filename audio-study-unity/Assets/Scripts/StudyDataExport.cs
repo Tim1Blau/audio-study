@@ -18,7 +18,7 @@ public class StudyDataExport : MonoBehaviour
             return;
         }
 
-        JsonData.Export(singleton.Data);
+        JsonData.Export(singleton.data);
     }
 
     [MenuItem("AudioStudy/ExportExampleData", false, 1)]

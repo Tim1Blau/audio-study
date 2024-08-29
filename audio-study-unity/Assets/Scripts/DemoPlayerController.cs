@@ -39,11 +39,8 @@ public class DemoPlayerController : MonoBehaviour
     // Camera rotation sensitivity.
     private const float sensitivity = 2.0f;
 
-    public static DemoPlayerController Singleton { get; private set; }
-
     void Start()
     {
-        Singleton = this;
         characterController = GetComponent<CharacterController>();
         Vector3 rotation = mainCamera.transform.localRotation.eulerAngles;
         rotationX = rotation.x;

@@ -5,6 +5,12 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(SteamAudioStaticMesh), typeof(AudioPositioner))]
+public class SceneSetup : MonoBehaviour
+{
+    [SerializeField] public Mesh mesh;
+    [SerializeField] public MeshFilter geometryObject;
+}
 
 [CustomEditor(typeof(SceneSetup))]
 public class SceneSetupEditor : Editor
@@ -17,27 +23,27 @@ public class SceneSetupEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        if (GUILayout.Button("Setup Scene")) SetupScene();
-    }
-    void SetupScene()
-    {
-        try
+        if (GUILayout.Button("Setup Scene"))
         {
-            Log("Start");
-            SetMesh();
-            ExportScene();
-            GenerateProbes();
-            serializedObject.ApplyModifiedProperties();
-        }
-        catch (Exception e)
-        {
-            Err(e.Message);
+            try
+            {
+                Log("START");
+                SetMesh();
+                ExportScene();
+                GenerateProbes();
+                serializedObject.ApplyModifiedProperties();
+                Log("FINISHED");
+            }
+            catch (Exception e)
+            {
+                Err(e.Message);
+            }
         }
     }
 
     void SetMesh()
     {
-        if (Config.mesh is not {} mesh)
+        if (Config.mesh is not { } mesh)
         {
             Err("Mesh is not set");
             return;
@@ -48,16 +54,19 @@ public class SceneSetupEditor : Editor
             Err("GeometryObject is not set");
             return;
         }
+
         if (geo.GetComponent<MeshCollider>() is not { } collider)
         {
             Err("GeometryObject has no MeshCollider");
             return;
         }
+
         if (geo.GetComponent<MeshFilter>() is not { } filter)
         {
             Err("GeometryObject has no MeshCollider");
             return;
         }
+
         collider.sharedMesh = filter.sharedMesh = mesh;
         EditorUtility.SetDirty(collider);
         EditorUtility.SetDirty(filter);
@@ -79,22 +88,20 @@ public class SceneSetupEditor : Editor
 
     void GenerateProbes()
     {
-        if (Config.GetComponent<AudioPositioner>() is not { probeBatch: {} probes })
-            throw new Exception("AudioPositioner is not set");
-        
         var scene = SceneManager.GetActiveScene();
-        
+
+        var probes = References.ProbeBatch;
         probes.asset = CreateAsset(ExportPaths.Probes);
         EditorUtility.SetDirty(probes);
         Log("Created Probe Asset");
-        
+
         probes.GenerateProbes();
         EditorSceneManager.MarkSceneDirty(scene);
         Log("Generated Probes");
 
         if (probes.GetNumProbes() == 0)
             throw new Exception("Problem with generated probes: generated 0 probes");
-        
+
         probes.BeginBake();
         EditorSceneManager.MarkSceneDirty(scene);
         Log("Generated Probes");
@@ -107,11 +114,4 @@ public class SceneSetupEditor : Editor
         AssetDatabase.CreateAsset(asset, path);
         return asset;
     }
-}
-
-[RequireComponent(typeof(SteamAudioStaticMesh), typeof(AudioPositioner))]
-public class SceneSetup : MonoBehaviour
-{
-    [SerializeField] public Mesh mesh;
-    [SerializeField] public MeshFilter geometryObject;
 }
