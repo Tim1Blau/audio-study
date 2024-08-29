@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SteamAudio;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Random = UnityEngine.Random;
 using Vector3 = UnityEngine.Vector3;
 
@@ -18,36 +19,34 @@ public static class Utils
         return 1f - angle01 * 2f;
     }
     
-    public static List<Vector3> RandomAudioPositions(int numSources, float minDistance, int randomSeed)
+    public static IEnumerable<Vector3> RandomAudioPositions(int count, float minDistance, int randomSeed)
     {
-        var result = new List<Vector3>();
         Random.InitState(randomSeed);
 
         var possiblePositions = References.ProbeBatch.ProbeSpheres
             .Select(p => p.center)
             .Select(Common.ConvertVector).ToArray();
 
-        if (possiblePositions.Length == 0)
-            throw new Exception($"Can't reposition audio source, there are no generated probe spheres");
+        Assert.AreNotEqual(possiblePositions.Length, 0, "Probe spheres are not generated yet.");
 
         var prev = References.ListenerPosition;
-        for (var i = 0; i < numSources; i++)
+        for (var i = 0; i < count; i++)
         {
             var distanceFiltered = possiblePositions.Where(v => Vector3.Distance(v, prev) > minDistance)
                 .ToArray();
             if (distanceFiltered.Length != 0)
             {
-                result.Add(prev = RandomIndex(distanceFiltered));
+                yield return prev = RandomIndex(distanceFiltered);
             }
             else
             {
                 Debug.LogWarning(
                     $"No available positions further than the min distance {minDistance}m away from the listener");
-                result.Add(prev = RandomIndex(possiblePositions));
+                yield return prev = RandomIndex(possiblePositions);
             }
         }
 
-        return result;
+        yield break;
 
         Vector3 RandomIndex(Vector3[] l) => l[Random.Range(0, l.Length - 1)]; // Note: ignore empty case
     }
