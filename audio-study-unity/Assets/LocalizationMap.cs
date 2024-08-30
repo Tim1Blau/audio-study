@@ -5,17 +5,52 @@ using UnityEngine.UI;
 public class LocalizationMap : SingletonBehaviour<LocalizationMap>
 {
     [SerializeField] public SpriteRenderer mapPin;
+    [SerializeField] SpriteRenderer playerPin;
     [SerializeField] RawImage map;
     [SerializeField] Camera mapCamera;
+
+
+    Vector3 _initialMapPosition;
 
     private void Start()
     {
         enabled = false;
+        _initialMapPosition = map.rectTransform.localPosition;
+        mapPin.color = Color.clear;
+    }
+
+    bool _isFocused = true;
+
+    public bool IsFocused
+    {
+        get => _isFocused;
+        set
+        {
+            if (_isFocused == value) return;
+            _isFocused = value;
+            if (value) enabled = true;
+            References.Player.ShowMouse = value;
+            if (value)
+            {
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 600);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 600);
+                map.rectTransform.pivot =
+                    map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                map.rectTransform.localPosition =
+                    new Vector3(_initialMapPosition.x, _initialMapPosition.y, _initialMapPosition.z);
+            }
+            else
+            {
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 400);
+                map.rectTransform.localPosition = new Vector3(0, 0, _initialMapPosition.z);
+                map.rectTransform.pivot = map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(1, 1);
+            }
+        }
     }
 
     void OnEnable()
     {
-        References.Player.ShowMouse = true;
         var mapTransform = map.GetComponent<RectTransform>().rect;
         map.texture = new RenderTexture((int)mapTransform.width, (int)mapTransform.height,
             GraphicsFormat.R8G8B8A8_UNorm, GraphicsFormat.D32_SFloat_S8_UInt);
@@ -24,7 +59,6 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
 
     void OnDisable()
     {
-        References.Player.ShowMouse = false;
         Destroy(map.texture);
         map.texture = null;
         mapPin.enabled = map.enabled = mapCamera.enabled = false;
@@ -61,6 +95,9 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
     void Update()
     {
         if (map.enabled) RenderMap();
+        playerPin.transform.position = References.Player.transform.position.WithY(0);
+        playerPin.transform.rotation =
+            Quaternion.Euler(90, References.Player.camera.transform.rotation.eulerAngles.y, 0);
     }
 
     void RenderMap()

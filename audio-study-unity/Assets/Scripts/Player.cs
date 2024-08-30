@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
@@ -6,7 +7,7 @@ public class Player : MonoBehaviour
     [SerializeField] float maxVerticalLookAngle = 80.0f;
     [SerializeField] float sensitivity = 2.0f;
     [SerializeField] float movementSpeed = 5.0f;
-    [SerializeField] public Camera mainCamera;
+    [SerializeField] public new Camera camera;
     public bool canMove = true;
 
     public bool ShowMouse
@@ -20,13 +21,13 @@ public class Player : MonoBehaviour
     }
 
     CharacterController _characterController;
-    bool _escaped;
+    bool _escaped = true;
     Vector2 _rotation;
 
     void Start()
     {
         _characterController = GetComponent<CharacterController>();
-        _rotation = mainCamera.transform.localRotation.eulerAngles;
+        _rotation = camera.transform.localRotation.eulerAngles;
     }
 
     void LateUpdate()
@@ -39,15 +40,15 @@ public class Player : MonoBehaviour
         // Rotation.
         if (!ShowMouse)
         {
-            var mouseInput = new Vector2(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
+            var mouseInput = new Vector2(Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y"));
             _rotation += sensitivity * mouseInput;
             _rotation.y = Mathf.Clamp(_rotation.y, -maxVerticalLookAngle, maxVerticalLookAngle);
-            mainCamera.transform.localRotation = Quaternion.Euler(_rotation.x, _rotation.y, 0.0f);
+            camera.transform.localRotation = Quaternion.Euler(_rotation.y, _rotation.x, 0.0f);
         }
 
         // Position
         var moveDir = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-        moveDir = mainCamera.transform.localRotation * moveDir;
+        moveDir = camera.transform.localRotation * moveDir;
         moveDir.y = 0.0f;
         _characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
     }

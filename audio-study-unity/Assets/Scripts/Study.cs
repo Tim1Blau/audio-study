@@ -64,6 +64,7 @@ public class Study : MonoBehaviour
         //yield return DoNavigationScenario();
         yield return WaitForPrompt("Completed Navigation Scenario 1");
     }
+
     const KeyCode mapKey = KeyCode.V;
 
     IEnumerator DoLocalizationScenario()
@@ -75,12 +76,18 @@ public class Study : MonoBehaviour
         };
 
         data.localizationScenarios.Add(scenario);
+
+        var map = LocalizationMap.Singleton;
+        map.enabled = true;
+        map.IsFocused = false;
+
         var index = 0;
         foreach (var audioPosition in audioPositions)
         {
+            ++index;
             References.AudioPosition = audioPosition;
             /*------------------------------------------------*/
-            var objectiveText = $"Localize audio source {++index}/{numSourcesToFind} on the map";
+            var objectiveText = $"Localize audio source {index}/{numSourcesToFind} on the map";
             yield return WaitForPrompt(objectiveText);
             /*------------------------------------------------*/
             UI.Singleton.SideText = objectiveText;
@@ -98,32 +105,34 @@ public class Study : MonoBehaviour
                 audioPosition = audioPosition.XZ(),
                 userLocalizationPosition = localizedPosition.XZ()
             });
-            
+
             Message($"Localized Position {localizedPosition}");
             Message($"Audio Position {audioPosition}");
             Message($"Distance to source {Vector2.Distance(localizedPosition.XZ(), audioPosition.XZ())}");
         }
+        map.enabled = false;
+        map.IsFocused = false;
     }
 
     IEnumerator WaitForSoundLocalized(string objectiveText, Action<Vector3> result)
     {
         var map = LocalizationMap.Singleton;
-
+        map.IsFocused = false;
+        
         Vector3? chosenPosition = null;
-
+        
         var checkMapKey = StartCoroutine(CheckMapKeyLoop());
         var choseLocation = StartCoroutine(MapInteractionLoop());
-        while (chosenPosition is null || !map.enabled)
+        while (chosenPosition is null || !map.IsFocused)
         {
             /*------------------------------------------------*/
             yield return UI.WaitForKeyHold(KeyCode.Space);
             /*------------------------------------------------*/
         }
-
         StopCoroutine(checkMapKey);
         StopCoroutine(choseLocation);
-        map.enabled = false;
         result.Invoke(chosenPosition.Value);
+        map.mapPin.color = Color.clear;
         yield break;
 
         IEnumerator MapInteractionLoop()
@@ -131,17 +140,14 @@ public class Study : MonoBehaviour
             while (Application.isPlaying)
             {
                 /*------------------------------------------------*/
+                yield return new WaitUntil(() => map.IsFocused);
                 yield return new WaitForNextFrameUnit();
                 /*------------------------------------------------*/
                 if (map.PointerToWorldPosition() is not { } location) continue;
-                if (Input.GetMouseButtonUp((int)MouseButton.Left))
-                {
-                    chosenPosition = location;
-                    map.mapPin.transform.position = location;
-                }
-                
+
                 if (Input.GetMouseButton((int)MouseButton.Left))
                 {
+                    chosenPosition = location;
                     map.mapPin.transform.position = location;
                     map.mapPin.color = Color.black;
                 }
@@ -161,14 +167,17 @@ public class Study : MonoBehaviour
         {
             while (Application.isPlaying)
             {
-                UI.Singleton.SideText = objectiveText + (map.enabled
-                    ? $" Click on map and hold [Space] to confirm"
-                    : $" Press {mapKey} to open the map");
+                if (!map.IsFocused && chosenPosition is null)
+                    map.mapPin.color = Color.clear;
+                UI.Singleton.SideText = map.IsFocused
+                    ? $"Click where you think the audio source is." +
+                      (chosenPosition is not null ? "\nHold [Space] to confirm your guess" : "")
+                    : objectiveText + $"\nPress {mapKey} to open the map";
+                if(Input.GetKeyDown(mapKey))
+                    map.IsFocused = !map.IsFocused;
                 /*------------------------------------------------*/
                 yield return new WaitForNextFrameUnit();
-                yield return new WaitUntil(() => Input.GetKeyDown(mapKey));
                 /*------------------------------------------------*/
-                map.enabled = !map.enabled;
             }
         }
     }
