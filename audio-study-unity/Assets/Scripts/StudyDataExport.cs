@@ -1,6 +1,5 @@
-using System.IO;
+#if UNITY_EDITOR
 using System.Linq;
-using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,28 +27,4 @@ public class StudyDataExport : MonoBehaviour
         JsonData.Export(data);
     }
 }
-
-public static class JsonData
-{
-    const string DefaultPath = "StudyData.json";
-
-    public static void Export(StudyData data, string path = DefaultPath)
-    {
-        var json = JsonUtility.ToJson(data, prettyPrint: Application.isEditor);
-        File.WriteAllText(path, json);
-        Debug.Log("Exported Data!");
-    }
-
-    [CanBeNull]
-    public static StudyData Import(string path = DefaultPath)
-    {
-        if (!File.Exists(path))
-        {
-            Debug.LogError($"File not found: {path}");
-            return null;
-        }
-
-        var json = File.ReadAllText(path);
-        return JsonUtility.FromJson<StudyData>(json);
-    }
-}
+#endif

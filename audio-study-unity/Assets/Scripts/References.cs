@@ -51,6 +51,7 @@ public class References : SingletonBehaviour<References>
         }
     }
 
+#if UNITY_EDITOR
     void OnValidate()
     {
         var hasErrors = false;
@@ -76,6 +77,8 @@ public class References : SingletonBehaviour<References>
             if (listener is null) yield return "Listener is null";
         }
     }
+#endif
+
 }
 
 public class SingletonBehaviour<T> : MonoBehaviour where T : SingletonBehaviour<T>

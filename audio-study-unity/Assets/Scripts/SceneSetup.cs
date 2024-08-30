@@ -1,7 +1,9 @@
 using System;
 using SteamAudio;
 using UnityEditor;
+#if UNITY_EDITOR
 using UnityEditor.SceneManagement;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,6 +14,7 @@ public class SceneSetup : MonoBehaviour
     [SerializeField] public MeshFilter geometryObject;
 }
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(SceneSetup))]
 public class SceneSetupEditor : Editor
 {
@@ -115,3 +118,4 @@ public class SceneSetupEditor : Editor
         return asset;
     }
 }
+#endif

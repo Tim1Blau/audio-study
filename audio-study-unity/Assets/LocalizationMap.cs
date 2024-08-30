@@ -8,14 +8,10 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
     [SerializeField] SpriteRenderer playerPin;
     [SerializeField] RawImage map;
     [SerializeField] Camera mapCamera;
-
-
-    Vector3 _initialMapPosition;
-
-    private void Start()
+    
+    void Start()
     {
         enabled = false;
-        _initialMapPosition = map.rectTransform.localPosition;
         mapPin.color = Color.clear;
     }
 
@@ -30,6 +26,7 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
             _isFocused = value;
             if (value) enabled = true;
             References.Player.ShowMouse = value;
+            UI.Singleton.screenText.enabled = !value;
             if (value)
             {
                 map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 600);
@@ -37,13 +34,13 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
                 map.rectTransform.pivot =
                     map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 map.rectTransform.localPosition =
-                    new Vector3(_initialMapPosition.x, _initialMapPosition.y, _initialMapPosition.z);
+                    new Vector3(0, 0, 0);
             }
             else
             {
                 map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
                 map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 400);
-                map.rectTransform.localPosition = new Vector3(0, 0, _initialMapPosition.z);
+                map.rectTransform.localPosition = new Vector3(0, 0, 0);
                 map.rectTransform.pivot = map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(1, 1);
             }
         }
@@ -62,6 +59,7 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
         Destroy(map.texture);
         map.texture = null;
         mapPin.enabled = map.enabled = mapCamera.enabled = false;
+        IsFocused = false;
     }
 
     public Vector3? PointerToWorldPosition()

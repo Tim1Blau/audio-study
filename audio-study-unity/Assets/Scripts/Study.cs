@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using Vector3 = UnityEngine.Vector3;
 
@@ -14,13 +13,15 @@ public class Study : MonoBehaviour
     [SerializeField] AudioConfiguration audioConfiguration = AudioConfiguration.Pathing;
 
     [Header("Random Audio Positions")]
-    [SerializeField] int numSourcesToFind = 10;
+    [SerializeField] int numSourcesToFind = 3;
 
     [SerializeField] float nextPositionMinDistance = 5.0f;
     [SerializeField] int seed = 12345678;
 
     [Header("Utility Parameters")]
     [SerializeField] float foundSourceDistance = 1.0f;
+
+    [SerializeField] KeyCode mapKey = KeyCode.E;
 
     public StudyData data;
 
@@ -29,7 +30,7 @@ public class Study : MonoBehaviour
 
     static void Message(string message) => Debug.Log("[STUDY] " + message);
 
-    IEnumerable<Vector3> audioPositions => Utils.RandomAudioPositions(numSourcesToFind, nextPositionMinDistance,
+    IEnumerable<Vector3> AudioPositions => Utils.RandomAudioPositions(numSourcesToFind, nextPositionMinDistance,
         seed + SceneManager.GetActiveScene().name.GetHashCode());
 
     void Start()
@@ -57,15 +58,15 @@ public class Study : MonoBehaviour
 
     IEnumerator DoStudy()
     {
-        // yield return WaitForPrompt("Welcome to the Study");
+        yield return WaitForPrompt("Welcome to the Study");
         // yield return WaitForPrompt("Task 1: Navigation\n" +
         //                            "Here you need to find audio sources as quickly as possible");
         yield return DoLocalizationScenario();
         //yield return DoNavigationScenario();
         yield return WaitForPrompt("Completed Navigation Scenario 1");
+        yield return WaitForPrompt("Export Data?");
+        JsonData.Export(data);
     }
-
-    const KeyCode mapKey = KeyCode.V;
 
     IEnumerator DoLocalizationScenario()
     {
@@ -78,49 +79,55 @@ public class Study : MonoBehaviour
         data.localizationScenarios.Add(scenario);
 
         var map = LocalizationMap.Singleton;
-        map.enabled = true;
-        map.IsFocused = false;
+        map.enabled = false;
 
         var index = 0;
-        foreach (var audioPosition in audioPositions)
+        foreach (var audioPosition in AudioPositions)
         {
             ++index;
             References.AudioPosition = audioPosition;
             /*------------------------------------------------*/
-            var objectiveText = $"Localize audio source {index}/{numSourcesToFind} on the map";
-            yield return WaitForPrompt(objectiveText);
+            yield return WaitForPrompt($"Next: Localize audio source {index}/{numSourcesToFind} on the map");
             /*------------------------------------------------*/
-            UI.Singleton.SideText = objectiveText;
+            map.enabled = true;
+            map.IsFocused = false;
+
+            UI.Singleton.screenText.text = $"Localize the audio source on the map";
 
             var startTime = References.Now;
             /*------------------------------------------------*/
             Vector3 localizedPosition = default;
-            yield return WaitForSoundLocalized(objectiveText, res => localizedPosition = res);
+            yield return WaitForSoundLocalized(res => localizedPosition = res);
             /*------------------------------------------------*/
-
+            /*------------------------------------------------*/
+            List<Vector2> audioPath = default;
+            yield return PathingRecorder.WaitForPathingData(res => audioPath = res);
+            /*------------------------------------------------*/
+            map.mapPin.color = Color.clear;
+            map.enabled = false;
+            
             scenario.tasks.Add(new LocalizationScenario.Task
             {
                 startTime = startTime,
                 endTime = References.Now,
+                listenerPosition = References.ListenerPosition.XZ(),
                 audioPosition = audioPosition.XZ(),
-                userLocalizationPosition = localizedPosition.XZ()
+                guessedPosition = localizedPosition.XZ(),
+                audioPath = audioPath,
             });
 
             Message($"Localized Position {localizedPosition}");
             Message($"Audio Position {audioPosition}");
             Message($"Distance to source {Vector2.Distance(localizedPosition.XZ(), audioPosition.XZ())}");
         }
-        map.enabled = false;
-        map.IsFocused = false;
     }
 
-    IEnumerator WaitForSoundLocalized(string objectiveText, Action<Vector3> result)
+    IEnumerator WaitForSoundLocalized(Action<Vector3> result)
     {
         var map = LocalizationMap.Singleton;
-        map.IsFocused = false;
-        
+
         Vector3? chosenPosition = null;
-        
+
         var checkMapKey = StartCoroutine(CheckMapKeyLoop());
         var choseLocation = StartCoroutine(MapInteractionLoop());
         while (chosenPosition is null || !map.IsFocused)
@@ -129,10 +136,10 @@ public class Study : MonoBehaviour
             yield return UI.WaitForKeyHold(KeyCode.Space);
             /*------------------------------------------------*/
         }
+
         StopCoroutine(checkMapKey);
         StopCoroutine(choseLocation);
         result.Invoke(chosenPosition.Value);
-        map.mapPin.color = Color.clear;
         yield break;
 
         IEnumerator MapInteractionLoop()
@@ -170,14 +177,19 @@ public class Study : MonoBehaviour
                 if (!map.IsFocused && chosenPosition is null)
                     map.mapPin.color = Color.clear;
                 UI.Singleton.SideText = map.IsFocused
-                    ? $"Click where you think the audio source is." +
-                      (chosenPosition is not null ? "\nHold [Space] to confirm your guess" : "")
-                    : objectiveText + $"\nPress {mapKey} to open the map";
-                if(Input.GetKeyDown(mapKey))
+                    ? chosenPosition is null
+                        ? "Click where you think the audio source is."
+                        : "\nHold [Space] to confirm your guess"
+                    : $"\nPress [{mapKey}] to open the map";
+                
+                // wait to prevent clash with player escape logic
+                var escapedLastFrame = Input.GetKeyDown(KeyCode.Escape);  
+                if (Input.GetKeyDown(mapKey))
                     map.IsFocused = !map.IsFocused;
                 /*------------------------------------------------*/
                 yield return new WaitForNextFrameUnit();
                 /*------------------------------------------------*/
+                if (escapedLastFrame) map.IsFocused = false;
             }
         }
     }
@@ -192,7 +204,7 @@ public class Study : MonoBehaviour
         };
         data.navigationScenarios.Add(scenario);
         var index = 0;
-        foreach (var audioPosition in audioPositions)
+        foreach (var audioPosition in AudioPositions)
         {
             References.AudioPosition = audioPosition;
             /*------------------------------------------------*/
@@ -206,7 +218,7 @@ public class Study : MonoBehaviour
                 startTime = References.Now,
                 endTime = -1,
                 audioPosition = References.AudioPosition.XZ(),
-                metrics = new()
+                metrics = new List<NavigationScenario.Task.MetricsFrame>()
             };
 
             scenario.tasks.Add(task);

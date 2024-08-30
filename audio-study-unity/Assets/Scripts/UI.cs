@@ -4,12 +4,12 @@ using UnityEngine.UI;
 
 public class UI : SingletonBehaviour<UI>
 {
-    [SerializeField] Text screenText;
+    [SerializeField] public Text screenText;
     [SerializeField] Text bottomText;
 
     [SerializeField] float pressToConfirmSeconds = 0.5f;
 
-    void Start()
+    void Awake()
     {
         bottomText.text = screenText.text = "";
     }

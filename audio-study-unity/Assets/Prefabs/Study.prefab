@@ -284,10 +284,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioConfiguration: 1
-  numSourcesToFind: 10
+  numSourcesToFind: 3
   nextPositionMinDistance: 5
   seed: 12345678
   foundSourceDistance: 1
+  mapKey: 101
   data:
     audioConfiguration: 0
     navigationScenarios: []

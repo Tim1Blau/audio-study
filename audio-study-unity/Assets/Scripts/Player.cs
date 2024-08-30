@@ -33,10 +33,9 @@ public class Player : MonoBehaviour
     void LateUpdate()
     {
         if (!ShowMouse && Input.GetKeyDown(KeyCode.Escape))
-            _escaped = ShowMouse = true;
+                _escaped = ShowMouse = true;
         else if (Input.GetMouseButtonDown(0) && _escaped)
             _escaped = ShowMouse = false;
-
         // Rotation.
         if (!ShowMouse)
         {

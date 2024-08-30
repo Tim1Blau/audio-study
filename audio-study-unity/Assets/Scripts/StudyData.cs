@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -35,8 +37,10 @@ public record LocalizationScenario
     {
         public float startTime;
         public float endTime;
+        public Vector2 listenerPosition;
         public Vector2 audioPosition;
-        public Vector2 userLocalizationPosition;
+        public Vector2 guessedPosition;
+        public List<Vector2> audioPath;
     }
 }
 
@@ -64,5 +68,31 @@ public record NavigationScenario
             public List<Vector2> audioPath;
             // CALCULATED: Velocity, LastAudioPath, Efficiency
         }
+    }
+}
+
+
+public static class JsonData
+{
+    const string DefaultPath = "StudyData.json";
+
+    public static void Export(StudyData data, string path = DefaultPath)
+    {
+        var json = JsonUtility.ToJson(data, prettyPrint: Application.isEditor);
+        File.WriteAllText(path, json);
+        Debug.Log("Exported Data!");
+    }
+
+    [CanBeNull]
+    public static StudyData Import(string path = DefaultPath)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"File not found: {path}");
+            return null;
+        }
+
+        var json = File.ReadAllText(path);
+        return JsonUtility.FromJson<StudyData>(json);
     }
 }
