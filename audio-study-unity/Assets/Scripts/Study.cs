@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector3 = UnityEngine.Vector3;
 
-[RequireComponent(typeof(References), typeof(UI))]
 public class Study : MonoBehaviour
 {
     [Header("Study Parameters")]

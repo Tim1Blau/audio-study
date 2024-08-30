@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,11 +8,10 @@ public class UI : SingletonBehaviour<UI>, IPointerClickHandler
 {
     [SerializeField] Text screenText;
     [SerializeField] Text bottomText;
+    [SerializeField] SpriteRenderer mapPin;
     [SerializeField] RawImage map;
     [SerializeField] Camera mapCamera;
     [SerializeField] float pressToConfirmSeconds = 0.5f;
-
-    [SerializeField] private Vector2 Offset;
 
     void OnEnable()
     {
@@ -46,7 +44,7 @@ public class UI : SingletonBehaviour<UI>, IPointerClickHandler
             var mapRay = mapCamera.ScreenPointToRay(localCursor01 * mapCamera.pixelRect.size);
 
             Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 1.0f);
-            if (XZIntersection(mapRay) is { } result) References.AudioPosition = result;
+            if (XZIntersection(mapRay) is { } result) mapPin.transform.position = result;
             return;
 
             Vector3? XZIntersection(Ray ray)
