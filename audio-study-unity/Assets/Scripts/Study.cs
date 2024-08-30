@@ -50,10 +50,19 @@ public class Study : MonoBehaviour
         data = new StudyData
         {
             audioConfiguration = audioConfiguration,
-            navigationScenarios = new(),
-            localizationScenarios = new()
+            navigationScenarios = new List<NavigationScenario>(),
+            localizationScenarios = new List<LocalizationScenario>()
         };
         StartCoroutine(DoStudy());
+    }
+
+    void Update()
+    {
+        // Backup Export
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
+        {
+            JsonData.Export(data);
+        }
     }
 
     IEnumerator DoStudy()
