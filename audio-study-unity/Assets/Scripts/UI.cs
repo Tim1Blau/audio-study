@@ -31,40 +31,32 @@ public class UI : SingletonBehaviour<UI>, IPointerClickHandler
     
     public void OnPointerClick(PointerEventData eventData)
     {
-        Vector2 localCursor = new Vector2(0, 0);
-
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(map.rectTransform, eventData.pressPosition, eventData.pressEventCamera, out localCursor))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(map.rectTransform, eventData.pressPosition, eventData.pressEventCamera, out var localCursor))
         {
-
-            var tex = map.texture;
+            var texSize = new Vector2(map.texture.width, map.texture.height);
             var r = map.rectTransform.rect;
-
+            
             //Using the size of the texture and the local cursor, clamp the X,Y coords between 0 and width - height of texture
-            float coordX = Mathf.Clamp(0, (((localCursor.x - r.x) * tex.width) / r.width), tex.width);
-            float coordY = Mathf.Clamp(0, (((localCursor.y - r.y) * tex.height) / r.height), tex.height);
-
+            var coord = (localCursor - r.position) * texSize / r.size;
+            var coordX = Mathf.Clamp(coord.x, 0, texSize.x);
+            var coordY = Mathf.Clamp(coord.y, 0, texSize.y);
+            
             //Convert coordX and coordY to % (0.0-1.0) with respect to texture width and height
-            float recalcX = coordX / tex.width;
-            float recalcY = coordY / tex.height;
-
+            var recalcX = coordX / texSize.x;
+            var recalcY = coordY / texSize.y;
+            
             localCursor = new Vector2(recalcX, recalcY);
-
+            
             CastMiniMapRayToWorld(localCursor);
         }
         
         void CastMiniMapRayToWorld(Vector2 localCursor)
         {
-            Ray miniMapRay = mapCamera.ScreenPointToRay(new Vector2(localCursor.x * mapCamera.pixelWidth, localCursor.y * mapCamera.pixelHeight));
+            mapCamera.aspect = map.rectTransform.rect.width / map.rectTransform.rect.height;
+            var mapRay = mapCamera.ScreenPointToRay(new Vector2(localCursor.x * mapCamera.pixelWidth, localCursor.y * mapCamera.pixelHeight));
 
-            RaycastHit miniMapHit;
-
-            Debug.DrawRay(miniMapRay.origin, miniMapRay.direction * 1000, Color.red, 3.0f);
-
-            if (XZIntersection(miniMapRay) is { } result)
-            {
-                References.AudioPosition = result;
-            }
-
+            Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 3.0f);
+            if (XZIntersection(mapRay) is { } result) References.AudioPosition = result;
             return;
             
             Vector3? XZIntersection(Ray ray)
