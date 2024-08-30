@@ -28,59 +28,41 @@ public class UI : SingletonBehaviour<UI>, IPointerClickHandler
         Destroy(map.texture);
         map.texture = null;
     }
-    
-    public void OnPointerClick(PointerEventData eventData)
+
+    public void OnPointerClick(PointerEventData click)
     {
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(map.rectTransform, eventData.pressPosition, eventData.pressEventCamera, out var localCursor))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                map.rectTransform, click.pressPosition, click.pressEventCamera, out var localCursor))
         {
-            var texSize = new Vector2(map.texture.width, map.texture.height);
-            var r = map.rectTransform.rect;
-            
-            //Using the size of the texture and the local cursor, clamp the X,Y coords between 0 and width - height of texture
-            var coord = (localCursor - r.position) * texSize / r.size;
-            var coordX = Mathf.Clamp(coord.x, 0, texSize.x);
-            var coordY = Mathf.Clamp(coord.y, 0, texSize.y);
-            
-            //Convert coordX and coordY to % (0.0-1.0) with respect to texture width and height
-            var recalcX = coordX / texSize.x;
-            var recalcY = coordY / texSize.y;
-            
-            localCursor = new Vector2(recalcX, recalcY);
-            
-            CastMiniMapRayToWorld(localCursor);
+            var mapRect = map.rectTransform.rect;
+            var coord = (localCursor - mapRect.position) / mapRect.size;
+            var localCursor01 = new Vector2(Mathf.Clamp01(coord.x), Mathf.Clamp01(coord.y));
+            CastMiniMapRayToWorld(localCursor01);
         }
-        
-        void CastMiniMapRayToWorld(Vector2 localCursor)
+
+        void CastMiniMapRayToWorld(Vector2 localCursor01)
         {
             mapCamera.aspect = map.rectTransform.rect.width / map.rectTransform.rect.height;
-            var mapRay = mapCamera.ScreenPointToRay(new Vector2(localCursor.x * mapCamera.pixelWidth, localCursor.y * mapCamera.pixelHeight));
+            var mapRay = mapCamera.ScreenPointToRay(localCursor01 * mapCamera.pixelRect.size);
 
-            Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 3.0f);
+            Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 1.0f);
             if (XZIntersection(mapRay) is { } result) References.AudioPosition = result;
             return;
-            
+
             Vector3? XZIntersection(Ray ray)
             {
-                // Check if the ray is parallel to the XZ plane (i.e., its direction has no y component)
-                if (Mathf.Abs(ray.direction.y) < Mathf.Epsilon)
-                    return null; // The ray is parallel to the XZ plane and never intersects
-
-                // Calculate the distance along the ray where it intersects the XZ plane
-                var t = -ray.origin.y / ray.direction.y;
-
-                // If t is negative, the intersection is behind the ray's origin
-                if (t < 0)
+                if (Mathf.Abs(ray.direction.y) < Mathf.Epsilon) // parallel to plane 
                     return null;
-
-                return ray.origin + t * ray.direction;
+                var distanceTo0 = -ray.origin.y / ray.direction.y;
+                if (distanceTo0 < 0) // behind plane 
+                    return null;
+                return ray.origin + distanceTo0 * ray.direction;
             }
         }
     }
 
     void Update()
     {
-        
-
         if (map.enabled)
         {
             mapCamera.targetTexture = map.texture as RenderTexture;
