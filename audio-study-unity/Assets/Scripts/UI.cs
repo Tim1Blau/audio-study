@@ -3,8 +3,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
-public class UI : SingletonBehaviour<UI>, IPointerClickHandler
+public class UI : SingletonBehaviour<UI>, IPointerClickHandler, IPointerMoveHandler
 {
     [SerializeField] Text screenText;
     [SerializeField] Text bottomText;
@@ -27,53 +28,66 @@ public class UI : SingletonBehaviour<UI>, IPointerClickHandler
         map.texture = null;
     }
 
-    public void OnPointerClick(PointerEventData click)
+    Vector3? PointerMapLocation(PointerEventData pointer)
     {
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                map.rectTransform, click.pressPosition, click.pressEventCamera, out var localCursor))
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                map.rectTransform, pointer.position, pointer.pressEventCamera, out var localCursor))
+            return null;
+        var mapRect = map.rectTransform.rect;
+        var coord = (localCursor - mapRect.position) / mapRect.size;
+        var localCursor01 = new Vector2(Mathf.Clamp01(coord.x), Mathf.Clamp01(coord.y));
+        
+        if (localCursor != coord)
         {
-            var mapRect = map.rectTransform.rect;
-            var coord = (localCursor - mapRect.position) / mapRect.size;
-            var localCursor01 = new Vector2(Mathf.Clamp01(coord.x), Mathf.Clamp01(coord.y));
-            CastMiniMapRayToWorld(localCursor01);
+            Debug.Log("Out of map");
+            return null;
         }
 
-        void CastMiniMapRayToWorld(Vector2 localCursor01)
+        // Cast map ray to world
+        mapCamera.aspect = map.rectTransform.rect.width / map.rectTransform.rect.height;
+        var mapRay = mapCamera.ScreenPointToRay(localCursor01 * mapCamera.pixelRect.size);
+
+        Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 1.0f);
+        return XZIntersection(mapRay);
+
+        Vector3? XZIntersection(Ray ray)
         {
-            mapCamera.aspect = map.rectTransform.rect.width / map.rectTransform.rect.height;
-            var mapRay = mapCamera.ScreenPointToRay(localCursor01 * mapCamera.pixelRect.size);
-
-            Debug.DrawRay(mapRay.origin, mapRay.direction * 1000, Color.red, 1.0f);
-            if (XZIntersection(mapRay) is { } result) mapPin.transform.position = result;
-            return;
-
-            Vector3? XZIntersection(Ray ray)
-            {
-                if (Mathf.Abs(ray.direction.y) < Mathf.Epsilon) // parallel to plane 
-                    return null;
-                var distanceTo0 = -ray.origin.y / ray.direction.y;
-                if (distanceTo0 < 0) // behind plane 
-                    return null;
-                return ray.origin + distanceTo0 * ray.direction;
-            }
+            if (Mathf.Abs(ray.direction.y) < Mathf.Epsilon) // parallel to plane 
+                return null;
+            var distanceTo0 = -ray.origin.y / ray.direction.y;
+            if (distanceTo0 < 0) // behind plane 
+                return null;
+            return ray.origin + distanceTo0 * ray.direction;
         }
+    }
+
+    void IPointerMoveHandler.OnPointerMove(PointerEventData evt)
+    {
+        if (PointerMapLocation(evt) is { } result) mapPin.transform.position = result;
+    }
+
+    void IPointerClickHandler.OnPointerClick(PointerEventData evt)
+    {
+        if (PointerMapLocation(evt) is { } result) mapPin.transform.position = result;
     }
 
     void Update()
     {
-        if (map.enabled)
-        {
-            mapCamera.targetTexture = map.texture as RenderTexture;
-            mapCamera.enabled = true;
-            mapCamera.cullingMask = LayerMask.GetMask("Default");
-            mapCamera.Render();
-            var clear = mapCamera.clearFlags;
-            mapCamera.clearFlags = CameraClearFlags.Nothing;
-            mapCamera.cullingMask = LayerMask.GetMask("MapIcon");
-            mapCamera.Render();
-            mapCamera.clearFlags = clear;
-            mapCamera.targetTexture = null;
-        }
+        if (map.enabled) RenderMap();
+    }
+
+    void RenderMap()
+    {
+        mapCamera.targetTexture = map.texture as RenderTexture;
+        mapCamera.enabled = true;
+        mapCamera.cullingMask = LayerMask.GetMask("Default");
+        mapCamera.Render();
+        var clear = mapCamera.clearFlags;
+        mapCamera.clearFlags = CameraClearFlags.Nothing;
+        mapCamera.cullingMask = LayerMask.GetMask("MapIcon");
+        mapCamera.Render();
+        mapCamera.clearFlags = clear;
+        mapCamera.targetTexture = null;
     }
 
     public string SideText
