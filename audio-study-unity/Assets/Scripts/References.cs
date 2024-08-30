@@ -3,6 +3,7 @@ using SteamAudio;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using Vector3 = UnityEngine.Vector3;
 
 public static class ExportPaths
@@ -17,13 +18,13 @@ public class References : SingletonBehaviour<References>
     [SerializeField] AudioSource audioSource;
     [SerializeField] SteamAudioProbeBatch probeBatch;
     [SerializeField] SteamAudioListener listener;
-    [SerializeField] DemoPlayerController playerController;
+    [FormerlySerializedAs("playerController")] [SerializeField] Player player;
 
     public static SteamAudioSource SteamAudioSource => Singleton.steamAudioSource;
     public static AudioSource AudioSource => Singleton.audioSource;
     public static SteamAudioProbeBatch ProbeBatch => Singleton.probeBatch;
     public static SteamAudioListener Listener => Singleton.listener;
-    public static DemoPlayerController PlayerController => Singleton.playerController;
+    public static Player Player => Singleton.player;
     
     public static float Now => Time.realtimeSinceStartup;
     public static Vector3 ListenerPosition
@@ -40,11 +41,11 @@ public class References : SingletonBehaviour<References>
     
     public static bool Paused
     {
-        get => !PlayerController.canMove;
+        get => !Player.canMove;
         set
         {
             if (Paused == value) return;
-            PlayerController.canMove = !value;
+            Player.canMove = !value;
             if (Paused) AudioSource.Pause();
             else AudioSource.UnPause();
         }
@@ -79,18 +80,16 @@ public class References : SingletonBehaviour<References>
 
 public class SingletonBehaviour<T> : MonoBehaviour where T : SingletonBehaviour<T>
 {
-    public static T Singleton { get; protected set; }
+    private static T _singleton;
 
-    void Awake()
+    public static T Singleton
     {
-        if (Singleton != null && Singleton != this)
+        get
         {
-            Destroy(this);
-            throw new System.Exception("An instance of this singleton already exists.");
-        }
-        else
-        {
-            Singleton = (T)this;
+            if (_singleton) return _singleton;
+            if (FindObjectOfType<T>() is { } obj)
+                return _singleton = obj;
+            throw new MissingComponentException($"Missing Singleton: There is no {typeof(T).Name} in the scene.");
         }
     }
 }

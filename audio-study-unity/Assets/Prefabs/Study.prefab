@@ -153,7 +153,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 4edcf2f526c6b8a4699f580a23f9aa59, type: 3}
-  m_Color: {r: 0.3773585, g: 0.051619805, b: 0.051619805, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -3518,6 +3518,7 @@ GameObject:
   - component: {fileID: 599864793496779185}
   - component: {fileID: 2506991340258657617}
   - component: {fileID: 7640028669115950532}
+  - component: {fileID: 6000912233136643682}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
@@ -3624,10 +3625,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   screenText: {fileID: 6156325486848057447}
   bottomText: {fileID: 1375992266117401968}
+  pressToConfirmSeconds: 0.5
+--- !u!114 &6000912233136643682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6689249245951868617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a929b1cfed569e4c9caeff127e09d36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   mapPin: {fileID: 567712161556647020}
   map: {fileID: 1610860384726581766}
   mapCamera: {fileID: 4497988044261956750}
-  pressToConfirmSeconds: 0.5
 --- !u!1 &8247666546080024584
 GameObject:
   m_ObjectHideFlags: 0

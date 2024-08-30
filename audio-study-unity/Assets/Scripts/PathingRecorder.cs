@@ -12,7 +12,7 @@ public class PathingRecorder
     {
         yield return WaitForPathingData(res =>
         {
-            var cam = References.PlayerController.mainCamera.transform;
+            var cam = References.Player.mainCamera.transform;
             var rotation = cam ? cam.rotation.eulerAngles : Vector3.zero;
             if (res.Count < 2)
             {

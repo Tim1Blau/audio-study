@@ -332,18 +332,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 567712161556647020, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
-      propertyPath: m_Color.b
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 567712161556647020, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
-      propertyPath: m_Color.g
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 567712161556647020, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 2592597141603480103, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Name
       value: Study

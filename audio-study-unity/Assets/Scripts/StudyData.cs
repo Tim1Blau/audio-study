@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum AudioConfiguration
 {
@@ -14,7 +15,7 @@ public record StudyData
 {
     public AudioConfiguration audioConfiguration;
     public List<NavigationScenario> navigationScenarios;
-    public List<LocalizationsForScene> localizationTasks;
+    [FormerlySerializedAs("localizationTasks")] public List<LocalizationScenario> localizationScenarios;
 }
 
 [Serializable]
@@ -24,13 +25,13 @@ public record Scene
 }
 
 [Serializable]
-public record LocalizationsForScene
+public record LocalizationScenario
 {
     public Scene scene;
-    public List<LocalizeAudioTask> tasks;
+    public List<Task> tasks;
 
     [Serializable]
-    public record LocalizeAudioTask
+    public record Task
     {
         public float startTime;
         public float endTime;
