@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// First-person player controller for Resonance Audio demo scenes.
 [RequireComponent(typeof(CharacterController))]
@@ -60,7 +61,7 @@ public class DemoPlayerController : MonoBehaviour
     void LateUpdate()
     {
 #if UNITY_EDITOR
-        if (Input.GetMouseButtonDown(0))
+        if (false && Input.GetMouseButtonDown(0))
         {
             Locked = true;
         }

@@ -136,7 +136,6 @@ public class Study : MonoBehaviour
             );
 
             UI.Singleton.SideText = $"Efficiency: {efficiency:P}";
-            Debug.Log($"Efficiency: {efficiency:P}");
             Debug.DrawLine(prevListenerPosition, References.ListenerPosition, new Color(1 - efficiency, efficiency, 0),
                 30f, true);
 

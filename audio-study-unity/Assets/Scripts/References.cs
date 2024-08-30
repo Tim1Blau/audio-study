@@ -52,8 +52,15 @@ public class References : SingletonBehaviour<References>
 
     void OnValidate()
     {
+        var hasErrors = false;
+        foreach (var error in Validate())
+        {
+            Debug.LogError(error);
+            hasErrors = true;
+        }
+        if (hasErrors) return;
+        
         steamAudioSource.pathingProbeBatch = probeBatch;
-        foreach (var se in Validate()) Debug.LogError(se);
         return;
 
         IEnumerable<string> Validate()

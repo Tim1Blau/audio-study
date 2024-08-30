@@ -157,7 +157,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -332,10 +332,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 599864793496779185, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 599864793496779185, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1143521364156120917, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: -3830088086820059559, guid: 3afc831d048315c409e75ed8d19f9f71, type: 3}
+    - target: {fileID: 1375992266117401968, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1534806201570636485, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: pathingProbeBatch
       value: 
@@ -348,9 +360,17 @@ PrefabInstance:
       propertyPath: mesh
       value: 
       objectReference: {fileID: -3830088086820059559, guid: 3afc831d048315c409e75ed8d19f9f71, type: 3}
+    - target: {fileID: 2506991340258657617, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2592597141603480103, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Name
       value: Study
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435828262191797331, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3609440916337121874, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_UiScaleMode
@@ -372,6 +392,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: -3830088086820059559, guid: 3afc831d048315c409e75ed8d19f9f71, type: 3}
+    - target: {fileID: 4497988044261956750, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_TargetDisplay
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4621023639449722373, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -8039,6 +8063,46 @@ PrefabInstance:
     - target: {fileID: 5352515755240828550, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: mProbeSpheres.Array.data[687].center.z
       value: -0.79999924
+      objectReference: {fileID: 0}
+    - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.67
+      objectReference: {fileID: 0}
+    - target: {fileID: 5578623700001727932, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Name
+      value: Map
+      objectReference: {fileID: 0}
+    - target: {fileID: 5578623700001727932, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040417452182256814, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040417452182256814, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040417452182256814, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040417452182256814, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040417452182256814, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6156325486848057447, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6689249245951868617, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Name
+      value: UICanvas
       objectReference: {fileID: 0}
     - target: {fileID: 7360709154953522437, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
