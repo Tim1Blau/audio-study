@@ -6,19 +6,19 @@ using UnityEngine;
 
 public static class Localization
 {
-    public static IEnumerator DoScenario(LocalizationScenario scenario)
+    public static IEnumerator DoTasks(List<LocalizationTask> tasks)
     {
         var map = LocalizationMap.Singleton;
         map.enabled = false;
 
         var index = 0;
-        foreach (var task in scenario.tasks)
+        foreach (var task in tasks)
         {
             ++index;
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
             References.ListenerPosition = task.listenerPosition.XZ(y: 0);
             /*------------------------------------------------*/
-            yield return UI.WaitForPrompt($"Next: Localize audio source {index}/{scenario.tasks.Count} on the map");
+            yield return UI.WaitForPrompt($"Next: Localize audio source {index}/{tasks.Count} on the map");
             /*------------------------------------------------*/
             map.enabled = true;
             map.IsFocused = false;

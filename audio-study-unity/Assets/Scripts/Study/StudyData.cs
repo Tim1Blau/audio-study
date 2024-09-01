@@ -14,63 +14,48 @@ public enum AudioConfiguration
 [Serializable]
 public record StudyData
 {
-    public List<NavigationScenario> navigationScenarios;
-    public List<LocalizationScenario> localizationScenarios;
+    public List<Scenario> scenarios = new ();
 }
 
 [Serializable]
-public record Scene
-{
-    public string name;
-}
-
-[Serializable]
-public record LocalizationScenario
+public record Scenario
 {
     public AudioConfiguration audioConfiguration;
-    public Scene scene;
-    public List<Task> tasks;
-
-    [Serializable]
-    public record Task
-    {
-        public Vector2 listenerPosition;
-        public Vector2 audioPosition;
-
-        public float startTime;
-        public float endTime;
-        public Vector2 guessedPosition;
-        public List<Vector2> audioPath;
-    }
+    public string scene = "";
+    public List<NavigationTask> navigationTasks = new ();
+    public List<LocalizationTask> localizationTasks = new ();
 }
 
 [Serializable]
-public record NavigationScenario
+public record LocalizationTask
 {
-    public AudioConfiguration audioConfiguration;
-    public Scene scene;
-    public List<Task> tasks;
+    public Vector2 listenerPosition;
+    public Vector2 audioPosition;
+
+    public float startTime = -1;
+    public float endTime = -1;
+    public Vector2 guessedPosition = Vector2.negativeInfinity;
+    public List<Vector2> audioPath = new();
+}
+    
+    
+[Serializable]
+public record NavigationTask
+{
+    public Vector2 listenerStartPosition;
+    public Vector2 audioPosition;
+
+    public float startTime = -1;
+    public float endTime = -1;
+    public List<MetricsFrame> metrics = new();
 
     [Serializable]
-    public record Task
+    public record MetricsFrame
     {
-        public Vector2 listenerStartPosition;
-        public Vector2 audioPosition;
-
-        public float startTime;
-        public float endTime;
-        public List<MetricsFrame> metrics;
-
-        [Serializable]
-        public record MetricsFrame
-        {
-            public float time;
-            public Vector2 position;
-            public Vector2 rotation;
-
-            public List<Vector2> audioPath;
-            // CALCULATED: Velocity, LastAudioPath, Efficiency
-        }
+        public float time;
+        public Vector2 position;
+        public Vector2 rotation;
+        public List<Vector2> audioPath = new();
     }
 }
 

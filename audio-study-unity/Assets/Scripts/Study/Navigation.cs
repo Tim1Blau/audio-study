@@ -1,20 +1,21 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public static class Navigation
 {
-    public static IEnumerator DoScenario(NavigationScenario scenario)
+    public static IEnumerator DoTasks(List<NavigationTask> tasks)
     {
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();
         var index = 0;
-        foreach (var task in scenario.tasks)
+        foreach (var task in tasks)
         {
             References.ListenerPosition = task.listenerStartPosition.XZ(y: 0);
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
             /*------------------------------------------------*/
-            var objectiveText = $"Find audio source {++index}/{scenario.tasks.Count}";
+            var objectiveText = $"Find audio source {++index}/{tasks.Count}";
             yield return UI.WaitForPrompt(objectiveText);
             /*------------------------------------------------*/
             UI.Singleton.bottomText.text = objectiveText;
@@ -33,13 +34,13 @@ public static class Navigation
         }
     }
 
-    static IEnumerator RecordNavFramesLoop(Action<NavigationScenario.Task.MetricsFrame> onNewFrame)
+    static IEnumerator RecordNavFramesLoop(Action<NavigationTask.MetricsFrame> onNewFrame)
     {
         while (Application.isPlaying)
         {
             var prevListenerPosition = References.ListenerPosition;
             /*------------------------------------------------*/
-            NavigationScenario.Task.MetricsFrame frame = default;
+            NavigationTask.MetricsFrame frame = default;
             yield return PathingRecorder.WaitForNextNavFrame(res => frame = res);
             /*------------------------------------------------*/
 

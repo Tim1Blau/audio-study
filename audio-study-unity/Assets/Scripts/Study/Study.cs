@@ -7,20 +7,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
-using Vector3 = UnityEngine.Vector3;
 
 public class Study : MonoBehaviour
 {
     public List<UnityEngine.SceneManagement.Scene> scenes = new();
-
-    public StudyData data = new()
-    {
-        navigationScenarios = new List<NavigationScenario>(),
-        localizationScenarios = new List<LocalizationScenario>()
-    };
+    public StudyData data = new();
 
     static bool _instantiated;
-    static StudySettings Settings => StudySettings.Singleton;
 
     public static void Initialize()
     {
@@ -49,21 +42,19 @@ public class Study : MonoBehaviour
         foreach (var scene in scenes)
         {
             SceneManager.LoadScene(scene.name);
-            var (navigation, localization) = CreateScenariosForCurrentScene();
-            data.navigationScenarios.Add(navigation);
-            data.localizationScenarios.Add(localization);
+            var scenario = GenerateScenarioForCurrentScene();
+            data.scenarios.Add(scenario);
 
-            navigation.audioConfiguration = localization.audioConfiguration = AudioConfiguration.Pathing; // make random
+            Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
 
             yield return new WaitForNextFrameUnit();
-            Setup(navigation.audioConfiguration);
             yield return UI.WaitForPrompt(
                 "Task 1/2: Navigation\nHere you need to find audio sources as quickly as possible");
-            yield return Navigation.DoScenario(navigation);
+            yield return Navigation.DoTasks(scenario.navigationTasks);
 
             yield return UI.WaitForPrompt(
                 "Task 2/2: Navigation\nHere you need to guess the position of the audio source without moving");
-            yield return Localization.DoScenario(localization);
+            yield return Localization.DoTasks(scenario.localizationTasks);
         }
 
         yield return UI.WaitForPrompt("Export Data?");
@@ -85,50 +76,40 @@ public class Study : MonoBehaviour
         }
     }
 
-    static (NavigationScenario, LocalizationScenario) CreateScenariosForCurrentScene()
+    static Scenario GenerateScenarioForCurrentScene()
     {
+        var settings = StudySettings.Singleton;
         var scene = SceneManager.GetActiveScene();
-        Random.InitState(Settings.seed);
+        Random.InitState(settings.seed);
         var positions = References.ProbeBatch.ProbeSpheres.Select(p => p.center)
             .Select(x => Common.ConvertVector(x).XZ()).ToArray();
 
-        return (
-            new NavigationScenario
-            {
-                scene = new Scene { name = scene.name },
-                tasks = Pairwise(RandomAudioPositions(Settings.navPositions + 1, Settings.navAudioDistances).ToList())
-                    .Select(x =>
-                        new NavigationScenario.Task
+        return new Scenario
+        {
+            scene = scene.name,
+            navigationTasks =
+                Pairwise(RandomAudioPositions(settings.navPositions + 1, settings.navAudioDistances).ToList())
+                    .Select(fromTo =>
+                        new NavigationTask
                         {
-                            startTime = -1,
-                            endTime = -1,
-                            listenerStartPosition = x.Item1,
-                            audioPosition = x.Item2,
-                            metrics = new()
+                            listenerStartPosition = fromTo.Item1,
+                            audioPosition = fromTo.Item2,
                         }
-                    ).ToList()
-            },
-            new LocalizationScenario
-            {
-                scene = new Scene { name = scene.name },
-                tasks = RandomAudioPositions(Settings.locListenerPositions, Settings.locListenerDistances)
+                    ).ToList(),
+            localizationTasks =
+                RandomAudioPositions(settings.locListenerPositions, settings.locListenerDistances)
                     .SelectMany(listenerPosition =>
-                        Enumerable.Range(0, Settings.locSourcePositionsPerListenerPos)
-                            .Select(_ => RandomPosWithMinDistance(listenerPosition, Settings.locAudioDistances))
+                        Enumerable.Range(0, settings.locSourcePositionsPerListenerPos)
+                            .Select(_ => RandomPosWithMinDistance(listenerPosition, settings.locAudioDistances))
                             .Select(audioPos =>
-                                new LocalizationScenario.Task
+                                new LocalizationTask
                                 {
-                                    startTime = -1,
-                                    endTime = -1,
                                     listenerPosition = listenerPosition,
                                     audioPosition = audioPos,
-                                    guessedPosition = Vector2.negativeInfinity,
-                                    audioPath = new List<Vector2>(),
                                 }
                             )
                     ).ToList()
-            }
-        );
+        };
 
         IEnumerable<Vector2> RandomAudioPositions(int count, float minDistance)
         {

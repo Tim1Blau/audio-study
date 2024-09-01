@@ -8,14 +8,14 @@ using Vector3 = UnityEngine.Vector3;
 
 public class PathingRecorder
 {
-    public static IEnumerator WaitForNextNavFrame(Action<NavigationScenario.Task.MetricsFrame> result)
+    public static IEnumerator WaitForNextNavFrame(Action<NavigationTask.MetricsFrame> result)
     {
         yield return WaitForPathingData(res =>
         {
             var cam = References.Player.camera.transform;
             var rotation = cam ? cam.rotation.eulerAngles : Vector3.zero;
-            result(
-                new NavigationScenario.Task.MetricsFrame
+            result.Invoke(
+                new NavigationTask.MetricsFrame
                 {
                     time = References.Now,
                     position = References.ListenerPosition.XZ(),
