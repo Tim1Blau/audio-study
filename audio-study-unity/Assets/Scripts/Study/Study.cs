@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
+/// Persistent Singleton spawned by StudySettings.Start() 
 public class Study : MonoBehaviour
 {
     public List<UnityEngine.SceneManagement.Scene> scenes = new();
@@ -19,17 +20,13 @@ public class Study : MonoBehaviour
     {
         if (_instantiated) return;
         _instantiated = true;
-        var studyManager = new GameObject(nameof(Study)).AddComponent<Study>();
-        DontDestroyOnLoad(studyManager);
+        DontDestroyOnLoad(new GameObject(nameof(Study)).AddComponent<Study>());
     }
 
     void Update()
     {
-        // Backup Export
-        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
-        {
-            JsonData.Export(data);
-        }
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P)) 
+            JsonData.Export(data); // Backup Export
     }
 
     IEnumerator Start() => DoStudy();
@@ -61,7 +58,7 @@ public class Study : MonoBehaviour
         JsonData.Export(data);
     }
 
-    void Setup(AudioConfiguration audioConfiguration)
+    static void Setup(AudioConfiguration audioConfiguration)
     {
         switch (audioConfiguration)
         {

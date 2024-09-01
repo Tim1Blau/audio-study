@@ -7,9 +7,9 @@ public class StudySettings : SingletonBehaviour<StudySettings>
 
     public int locListenerPositions = 3;
     public int locSourcePositionsPerListenerPos = 3;
-    public int navPositions = 10;
     public float locListenerDistances = 10;
-    public float locAudioDistances = 0;
+    public float locAudioDistances = 5;
+    public int navPositions = 10;
     public float navAudioDistances = 5;
 
     [Header("Utility Parameters")]
