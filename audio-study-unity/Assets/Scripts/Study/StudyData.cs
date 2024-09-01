@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public enum AudioConfiguration
 {
@@ -74,7 +73,6 @@ public record NavigationScenario
         }
     }
 }
-
 
 public static class JsonData
 {
