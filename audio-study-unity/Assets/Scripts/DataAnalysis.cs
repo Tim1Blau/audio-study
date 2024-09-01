@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class DataAnalysis : MonoBehaviour
 {
-    public static IEnumerable<(NavigationScenario.Task.MetricsFrame frame, float Efficiency)> TaskEfficiency(NavigationScenario.Task task)
+    public static IEnumerable<(NavigationTask.MetricsFrame frame, float Efficiency)> TaskEfficiency(NavigationTask task)
     {
         if (task.metrics.Count == 0) yield break;
         var lastFrame = task.metrics.First();
@@ -47,7 +47,7 @@ public class DataAnalysis : MonoBehaviour
             Debug.LogWarning("DemoStudyData.json could not be found");
             return;
         }
-        var task = data.navigationScenarios.First().tasks.First(); // assume
+        var task = data.scenarios.First().navigationTasks.First(); // assume
         var efficiency = TaskEfficiency(task);
         
         
@@ -124,14 +124,14 @@ public static class XLUtils
             row.Cell(cAudioPositionX).SetTitle("AudioPosX");
             row.Cell(cAudioPositionY).SetTitle("AudioPosY");
 
-            foreach (var navigationsForScene in data.navigationScenarios)
+            foreach (var scenario in data.scenarios)
             {
                 var taskIndex = 0;
-                foreach (var task in navigationsForScene.tasks)
+                foreach (var task in scenario.navigationTasks)
                 {
                     row = x.Row(r++);
 
-                    row.Cell(cScene).Value = navigationsForScene.scene.name;
+                    row.Cell(cScene).Value = scenario.scene;
                     row.Cell(cTask).Value = taskIndex++;
                     row.Cell(cStartTime).Value = task.startTime;
                     row.Cell(cEndTime).Value = task.endTime;
