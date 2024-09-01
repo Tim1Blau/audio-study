@@ -20,8 +20,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    CharacterController _characterController;
-    bool _escaped = true;
+    public CharacterController _characterController;
     Vector2 _rotation;
 
     void Start()
@@ -29,13 +28,15 @@ public class Player : MonoBehaviour
         _characterController = GetComponent<CharacterController>();
         _rotation = camera.transform.localRotation.eulerAngles;
     }
+    
+    public bool shouldTeleport = false;
 
     void LateUpdate()
     {
-        if (!ShowMouse && Input.GetKeyDown(KeyCode.Escape))
-                _escaped = ShowMouse = true;
-        else if (Input.GetMouseButtonDown(0) && _escaped)
-            _escaped = ShowMouse = false;
+        if (Input.GetKeyDown(KeyCode.Escape))
+            ShowMouse = true;
+        else if (Input.GetMouseButtonDown(0) && !LocalizationMap.Singleton.IsFocused)
+            ShowMouse = false;
         // Rotation.
         if (!ShowMouse)
         {
@@ -49,6 +50,7 @@ public class Player : MonoBehaviour
         var moveDir = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveDir = camera.transform.localRotation * moveDir;
         moveDir.y = 0.0f;
-        _characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
+        if(!shouldTeleport)_characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
+        else shouldTeleport = false;
     }
 }

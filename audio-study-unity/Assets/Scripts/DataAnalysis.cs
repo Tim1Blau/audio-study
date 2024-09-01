@@ -100,7 +100,7 @@ public static class XLUtils
             x.Cell(3, 1).Value = DateTime.Now.ToShortTimeString();
 
             x.Cell(1, 2).SetTitle("AudioConfiguration");
-            x.Cell(2, 2).Value = data.audioConfiguration.ToString();
+            // x.Cell(2, 2).Value = data.audioConfiguration.ToString();
         }
 
         void WriteNavigationTask()

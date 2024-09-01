@@ -7,7 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[RequireComponent(typeof(SteamAudioStaticMesh), typeof(Study))]
+[RequireComponent(typeof(SteamAudioStaticMesh), typeof(StudySettings))]
 public class SceneSetup : MonoBehaviour
 {
     [SerializeField] public Mesh mesh;

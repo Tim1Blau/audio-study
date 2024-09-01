@@ -336,6 +336,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Study
       objectReference: {fileID: 0}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: settings.seed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: settings.navAudioDistances
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -46,9 +46,10 @@ namespace SteamAudio
         [Header("HRTF Settings")]
         public int currentHRTF = 0;
 
-        public PathingVisualizationCallback PathingVisCallback = null;
-        
 #if STEAMAUDIO_ENABLED
+        public PathingVisualizationCallback PathingVisCallback = null;
+        void OnPathingVis(Vector3 from, Vector3 to, Bool occluded, IntPtr userData) => PathingVisCallback?.Invoke(from, to, occluded, userData);
+        
         public string[] hrtfNames = null;
 
         int mNumCPUCores = 0;
@@ -543,7 +544,7 @@ namespace SteamAudio
             sharedInputs.duration = SteamAudioSettings.Singleton.realTimeDuration;
             sharedInputs.order = SteamAudioSettings.Singleton.realTimeAmbisonicOrder;
             sharedInputs.irradianceMinDistance = SteamAudioSettings.Singleton.realTimeIrradianceMinDistance;
-            sharedInputs.pathingVisualizationCallback = PathingVisCallback; // = null // MODIFIED CODE
+            sharedInputs.pathingVisualizationCallback = OnPathingVis; // = null // MODIFIED CODE
             sharedInputs.pathingUserData = IntPtr.Zero;
 
             mSimulator.SetSharedInputs(SimulationFlags.Direct, sharedInputs);

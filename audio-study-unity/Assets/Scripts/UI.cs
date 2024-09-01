@@ -5,19 +5,14 @@ using UnityEngine.UI;
 public class UI : SingletonBehaviour<UI>
 {
     [SerializeField] public Text screenText;
-    [SerializeField] Text bottomText;
+    [SerializeField] public Text bottomText;
 
     [SerializeField] float pressToConfirmSeconds = 0.5f;
 
-    void Awake()
+    new void Awake()
     {
+        base.Awake();
         bottomText.text = screenText.text = "";
-    }
-    
-    public string SideText
-    {
-        get => bottomText.text;
-        set => bottomText.text = value;
     }
 
     public IEnumerator Prompt(string message)

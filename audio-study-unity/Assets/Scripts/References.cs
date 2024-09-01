@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using SteamAudio;
 using UnityEditor;
@@ -18,19 +19,24 @@ public class References : SingletonBehaviour<References>
     [SerializeField] AudioSource audioSource;
     [SerializeField] SteamAudioProbeBatch probeBatch;
     [SerializeField] SteamAudioListener listener;
-    [FormerlySerializedAs("playerController")] [SerializeField] Player player;
+    [SerializeField] Player player;
 
     public static SteamAudioSource SteamAudioSource => Singleton.steamAudioSource;
     public static AudioSource AudioSource => Singleton.audioSource;
     public static SteamAudioProbeBatch ProbeBatch => Singleton.probeBatch;
     public static SteamAudioListener Listener => Singleton.listener;
     public static Player Player => Singleton.player;
-    
+
     public static float Now => Time.realtimeSinceStartup;
+
     public static Vector3 ListenerPosition
     {
         get => Listener.transform.position;
-        set => Listener.transform.position = value;
+        set
+        {
+            Listener.transform.position = value;
+            Physics.SyncTransforms();
+        }
     }
 
     public static Vector3 AudioPosition
@@ -38,7 +44,7 @@ public class References : SingletonBehaviour<References>
         get => SteamAudioSource.transform.position;
         set => SteamAudioSource.transform.position = value;
     }
-    
+
     public static bool Paused
     {
         get => !Player.canMove;
@@ -60,8 +66,9 @@ public class References : SingletonBehaviour<References>
             Debug.LogError(error);
             hasErrors = true;
         }
+
         if (hasErrors) return;
-        
+
         steamAudioSource.pathingProbeBatch = probeBatch;
         return;
 
@@ -77,22 +84,15 @@ public class References : SingletonBehaviour<References>
             if (listener is null) yield return "Listener is null";
         }
     }
-#endif
-
+#endif       
 }
 
 public class SingletonBehaviour<T> : MonoBehaviour where T : SingletonBehaviour<T>
 {
-    private static T _singleton;
+    public static T Singleton { get; private set; }
 
-    public static T Singleton
+    protected void Awake()
     {
-        get
-        {
-            if (_singleton) return _singleton;
-            if (FindObjectOfType<T>() is { } obj)
-                return _singleton = obj;
-            throw new MissingComponentException($"Missing Singleton: There is no {typeof(T).Name} in the scene.");
-        }
+        Singleton = this as T;
     }
 }

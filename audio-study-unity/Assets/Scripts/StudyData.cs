@@ -7,18 +7,15 @@ using UnityEngine.Serialization;
 
 public enum AudioConfiguration
 {
-    Basic, // Transmission, No Pathing
-    Pathing, // Pathing, No Transmission
-    Mixed // Pathing & Transmission 
+    Basic = 0, // Transmission, No Pathing
+    Pathing = 1, // Pathing, No Transmission
+    Mixed = 2 // Pathing & Transmission 
 }
 
 [Serializable]
 public record StudyData
 {
-    public AudioConfiguration audioConfiguration;
     public List<NavigationScenario> navigationScenarios;
-
-    [FormerlySerializedAs("localizationTasks")]
     public List<LocalizationScenario> localizationScenarios;
 }
 
@@ -31,16 +28,18 @@ public record Scene
 [Serializable]
 public record LocalizationScenario
 {
+    public AudioConfiguration audioConfiguration;
     public Scene scene;
     public List<Task> tasks;
 
     [Serializable]
     public record Task
     {
-        public float startTime;
-        public float endTime;
         public Vector2 listenerPosition;
         public Vector2 audioPosition;
+
+        public float startTime;
+        public float endTime;
         public Vector2 guessedPosition;
         public List<Vector2> audioPath;
     }
@@ -49,15 +48,18 @@ public record LocalizationScenario
 [Serializable]
 public record NavigationScenario
 {
+    public AudioConfiguration audioConfiguration;
     public Scene scene;
     public List<Task> tasks;
 
     [Serializable]
     public record Task
     {
+        public Vector2 listenerStartPosition;
+        public Vector2 audioPosition;
+
         public float startTime;
         public float endTime;
-        public Vector2 audioPosition;
         public List<MetricsFrame> metrics;
 
         [Serializable]

@@ -14,10 +14,6 @@ public class PathingRecorder
         {
             var cam = References.Player.camera.transform;
             var rotation = cam ? cam.rotation.eulerAngles : Vector3.zero;
-            if (res.Count < 2)
-            {
-                Debug.LogError("audioPath has less then two elements");
-            }
             result(
                 new NavigationScenario.Task.MetricsFrame
                 {
@@ -80,10 +76,8 @@ public class PathingRecorder
         var res = _currentAudioPath.Select(x => x.To).Prepend(_currentAudioPath[0].From)
             .Select(x => x.XZ()).ToList();
         _currentAudioPath.Clear();
-        if (res.Count < 2)
-        {
-            Debug.LogError("audioPath has less than two elements");
-        }
-        return res;
+        if (res.Count >= 2) return res;
+        Debug.LogError("audioPath has less than two elements");
+        return new List<Vector2>();
     }
 }

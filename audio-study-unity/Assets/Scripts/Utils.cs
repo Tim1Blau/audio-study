@@ -25,38 +25,6 @@ public static class Utils
         var angle01 = Vector2.Angle(moveDir, optimalDir) / 180f;
         return 1f - angle01 * 2f;
     }
-    
-    public static IEnumerable<Vector3> RandomAudioPositions(int count, float minDistance, int randomSeed)
-    {
-        Random.InitState(randomSeed);
-
-        var possiblePositions = References.ProbeBatch.ProbeSpheres
-            .Select(p => p.center)
-            .Select(Common.ConvertVector).ToArray();
-
-        Assert.AreNotEqual(possiblePositions.Length, 0, "Probe spheres are not generated yet.");
-
-        var prev = References.ListenerPosition;
-        for (var i = 0; i < count; i++)
-        {
-            var distanceFiltered = possiblePositions.Where(v => Vector3.Distance(v, prev) > minDistance)
-                .ToArray();
-            if (distanceFiltered.Length != 0)
-            {
-                yield return prev = RandomIndex(distanceFiltered);
-            }
-            else
-            {
-                Debug.LogWarning(
-                    $"No available positions further than the min distance {minDistance}m away from the listener");
-                yield return prev = RandomIndex(possiblePositions);
-            }
-        }
-
-        yield break;
-
-        Vector3 RandomIndex(Vector3[] l) => l[Random.Range(0, l.Length - 1)]; // Note: ignore empty case
-    }
 }
 
 

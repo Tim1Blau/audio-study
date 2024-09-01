@@ -283,16 +283,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1f221a24d96cca428d48b7e94370a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioConfiguration: 1
-  numSourcesToFind: 3
-  nextPositionMinDistance: 5
-  seed: 12345678
-  foundSourceDistance: 1
-  mapKey: 101
-  data:
-    audioConfiguration: 0
-    navigationScenarios: []
-    localizationScenarios: []
+  settings:
+    seed: 12345678
+    locListenerPositions: 3
+    locSourcePositionsPerListenerPos: 3
+    navPositions: 10
+    locListenerDistances: 10
+    locAudioDistances: 0
+    navAudioDistances: 5
+    foundSourceDistance: 1
+    spawnHeight: 0.8
+    mapKey: 101
 --- !u!114 &1682409464593420310
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4005,17 +4006,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 4602188136551922, guid: 5740136243dc84ebabac64bee9f03af4, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.8
-      objectReference: {fileID: 0}
     - target: {fileID: 4829936838378198, guid: 5740136243dc84ebabac64bee9f03af4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.65
-      objectReference: {fileID: 0}
-    - target: {fileID: 4829936838378198, guid: 5740136243dc84ebabac64bee9f03af4, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 4829936838378198, guid: 5740136243dc84ebabac64bee9f03af4, type: 3}
       propertyPath: m_LocalPosition.z
