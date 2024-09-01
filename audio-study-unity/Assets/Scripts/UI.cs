@@ -14,8 +14,17 @@ public class UI : SingletonBehaviour<UI>
         base.Awake();
         bottomText.text = screenText.text = "";
     }
+    
+    public static IEnumerator WaitForPrompt(string message)
+    {
+        References.Paused = true;
+        /*------------------------------------------------*/
+        yield return UI.Singleton.Prompt(message);
+        /*------------------------------------------------*/
+        References.Paused = false;
+    }
 
-    public IEnumerator Prompt(string message)
+    IEnumerator Prompt(string message)
     {
         screenText.text = message;
         bottomText.text = "[Hold space to continue]";

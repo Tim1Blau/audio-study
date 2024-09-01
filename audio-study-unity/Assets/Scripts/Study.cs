@@ -30,8 +30,6 @@ public class Study : MonoBehaviour
         DontDestroyOnLoad(studyManager);
     }
 
-    static void Message(string message) => Debug.Log("[STUDY] " + message);
-
     void Update()
     {
         // Backup Export
@@ -45,7 +43,7 @@ public class Study : MonoBehaviour
 
     IEnumerator DoStudy()
     {
-        yield return WaitForPrompt("Welcome to the Study");
+        yield return UI.WaitForPrompt("Welcome to the Study");
 
         if (scenes.Count == 0) scenes.Add(SceneManager.GetActiveScene());
         foreach (var scene in scenes)
@@ -59,216 +57,17 @@ public class Study : MonoBehaviour
 
             yield return new WaitForNextFrameUnit();
             Setup(navigation.audioConfiguration);
-            yield return WaitForPrompt(
+            yield return UI.WaitForPrompt(
                 "Task 1/2: Navigation\nHere you need to find audio sources as quickly as possible");
-            yield return DoNavigationScenario(navigation);
+            yield return Navigation.DoScenario(navigation);
 
-            yield return WaitForPrompt(
+            yield return UI.WaitForPrompt(
                 "Task 2/2: Navigation\nHere you need to guess the position of the audio source without moving");
-            yield return DoLocalizationScenario(localization);
+            yield return Localization.DoScenario(localization);
         }
 
-        yield return WaitForPrompt("Export Data?");
+        yield return UI.WaitForPrompt("Export Data?");
         JsonData.Export(data);
-    }
-
-
-    #region Localization
-
-    IEnumerator DoLocalizationScenario(LocalizationScenario scenario)
-    {
-        var map = LocalizationMap.Singleton;
-        map.enabled = false;
-
-        var index = 0;
-        foreach (var task in scenario.tasks)
-        {
-            ++index;
-            References.AudioPosition = task.audioPosition.XZ(y: Settings.spawnHeight);
-            References.ListenerPosition = task.listenerPosition.XZ(y: 0);
-            /*------------------------------------------------*/
-            yield return WaitForPrompt($"Next: Localize audio source {index}/{scenario.tasks.Count} on the map");
-            /*------------------------------------------------*/
-            map.enabled = true;
-            map.IsFocused = false;
-
-            UI.Singleton.screenText.text = $"Localize the audio source on the map";
-
-            task.startTime = References.Now;
-            /*------------------------------------------------*/
-            Vector3 localizedPosition = default;
-            yield return WaitForSoundLocalized(res => localizedPosition = res);
-            /*------------------------------------------------*/
-            /*------------------------------------------------*/
-            List<Vector2> audioPath = default;
-            yield return PathingRecorder.WaitForPathingData(res => audioPath = res);
-            /*------------------------------------------------*/
-            map.mapPin.color = Color.clear;
-            map.enabled = false;
-
-            task.endTime = References.Now;
-            task.guessedPosition = localizedPosition.XZ();
-            task.audioPath = audioPath;
-
-#if UNITY_EDITOR
-            Message($"Localized Position {localizedPosition}");
-            Message($"Audio Position {task.audioPosition}");
-            Message($"Distance to source {Vector2.Distance(task.guessedPosition, task.audioPosition)}");
-#endif
-        }
-    }
-
-    IEnumerator WaitForSoundLocalized(Action<Vector3> result)
-    {
-        var map = LocalizationMap.Singleton;
-
-        Vector3? chosenPosition = null;
-
-        var checkMapKey = StartCoroutine(CheckMapKeyLoop());
-        var choseLocation = StartCoroutine(MapInteractionLoop());
-        while (chosenPosition is null || !map.IsFocused)
-        {
-            /*------------------------------------------------*/
-            yield return UI.WaitForKeyHold(KeyCode.Space);
-            /*------------------------------------------------*/
-        }
-
-        StopCoroutine(checkMapKey);
-        StopCoroutine(choseLocation);
-        result.Invoke(chosenPosition.Value);
-        yield break;
-
-        IEnumerator MapInteractionLoop()
-        {
-            while (Application.isPlaying)
-            {
-                if (!map.IsFocused && chosenPosition is null)
-                    map.mapPin.color = Color.clear;
-                UI.Singleton.bottomText.text = map.IsFocused
-                    ? chosenPosition is null
-                        ? "Click where you think the audio source is."
-                        : "\nHold [Space] to confirm your guess"
-                    : $"\nPress [{Settings.mapKey}] to open the map";
-                /*------------------------------------------------*/
-                yield return new WaitUntil(() => map.IsFocused);
-                yield return new WaitForNextFrameUnit();
-                /*------------------------------------------------*/
-                if (map.PointerToWorldPosition() is not { } location) continue;
-
-                if (Input.GetMouseButton((int)MouseButton.Left))
-                {
-                    chosenPosition = location;
-                    map.mapPin.transform.position = location;
-                    map.mapPin.color = Color.black;
-                }
-                else if (chosenPosition is null)
-                {
-                    map.mapPin.transform.position = location;
-                    map.mapPin.color = Color.grey;
-                }
-                else
-                {
-                    map.mapPin.color = Color.red;
-                }
-            }
-        }
-
-        IEnumerator CheckMapKeyLoop()
-        {
-            while (Application.isPlaying)
-            {
-                // wait to prevent clash with player escape logic
-                var escapedLastFrame = Input.GetKeyDown(KeyCode.Escape);
-                if (Input.GetKeyDown(Settings.mapKey))
-                    map.IsFocused = !map.IsFocused;
-                /*------------------------------------------------*/
-                yield return new WaitForNextFrameUnit();
-                /*------------------------------------------------*/
-                if (escapedLastFrame) map.IsFocused = false;
-            }
-        }
-    }
-
-    #endregion
-
-    #region Navigation
-
-    IEnumerator DoNavigationScenario(NavigationScenario scenario)
-    {
-        var index = 0;
-        foreach (var task in scenario.tasks)
-        {
-            References.ListenerPosition = task.listenerStartPosition.XZ(y: 0);
-            References.AudioPosition = task.audioPosition.XZ(y: Settings.spawnHeight);
-            /*------------------------------------------------*/
-            var objectiveText = $"Find audio source {++index}/{scenario.tasks.Count}";
-            yield return WaitForPrompt(objectiveText);
-            /*------------------------------------------------*/
-            UI.Singleton.bottomText.text = objectiveText;
-
-            task.startTime = References.Now;
-            var recording = StartCoroutine(RecordNavFramesLoop(onNewFrame: task.metrics.Add));
-            /*------------------------------------------------*/
-            yield return new WaitUntil(() => HasFoundSource() || (Application.isEditor && Input.GetKeyDown(KeyCode.R)));
-            /*------------------------------------------------*/
-            StopCoroutine(recording);
-            task.endTime = References.Now;
-
-            bool HasFoundSource() =>
-                Vector3.Distance(References.ListenerPosition, References.AudioPosition) <
-                Settings.foundSourceDistance;
-        }
-    }
-
-    IEnumerator RecordNavFramesLoop(Action<NavigationScenario.Task.MetricsFrame> onNewFrame)
-    {
-        while (Application.isPlaying)
-        {
-            var prevListenerPosition = References.ListenerPosition;
-            /*------------------------------------------------*/
-            NavigationScenario.Task.MetricsFrame frame = default;
-            yield return PathingRecorder.WaitForNextNavFrame(res => frame = res);
-            /*------------------------------------------------*/
-
-            if (frame.audioPath.Count < 2)
-            {
-                Debug.LogError("audioPath has less then two elements");
-                continue;
-            }
-
-            onNewFrame(frame);
-
-#if UNITY_EDITOR
-            var efficiency = Utils.Efficiency(
-                moveDir: (References.ListenerPosition - prevListenerPosition).XZ(),
-                optimalDir: frame.audioPath[^2] - frame.audioPath[^1]
-            );
-
-            UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
-            Debug.DrawLine(prevListenerPosition, References.ListenerPosition, new Color(1 - efficiency, efficiency, 0),
-                30f, true);
-
-            var pre = frame.audioPath.First();
-            foreach (var next in frame.audioPath.Skip(1))
-            {
-                const float y = 3.0f;
-                Debug.DrawLine(pre.XZ(y), next.XZ(y), Color.magenta, 0.1f, true);
-                pre = next;
-            }
-#endif
-        }
-    }
-
-    #endregion
-
-    static IEnumerator WaitForPrompt(string message)
-    {
-        References.Paused = true;
-        Message(message);
-        /*------------------------------------------------*/
-        yield return UI.Singleton.Prompt(message);
-        /*------------------------------------------------*/
-        References.Paused = false;
     }
 
     void Setup(AudioConfiguration audioConfiguration)
