@@ -17,7 +17,9 @@ public record StudyData
 {
     public AudioConfiguration audioConfiguration;
     public List<NavigationScenario> navigationScenarios;
-    [FormerlySerializedAs("localizationTasks")] public List<LocalizationScenario> localizationScenarios;
+
+    [FormerlySerializedAs("localizationTasks")]
+    public List<LocalizationScenario> localizationScenarios;
 }
 
 [Serializable]
@@ -74,13 +76,15 @@ public record NavigationScenario
 
 public static class JsonData
 {
-    const string DefaultPath = "StudyData.json";
+    const string DefaultPath = "StudyData";
 
-    public static void Export(StudyData data, string path = DefaultPath)
+    public static void Export(StudyData data, string path = DefaultPath, bool addDateToPath = true)
     {
         var json = JsonUtility.ToJson(data, prettyPrint: Application.isEditor);
+        if (addDateToPath) path += DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
+        path += ".json";
         File.WriteAllText(path, json);
-        Debug.Log("Exported Data!");
+        Debug.Log($"Exported Data to {path}");
     }
 
     [CanBeNull]

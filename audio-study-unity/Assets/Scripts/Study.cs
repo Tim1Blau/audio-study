@@ -68,14 +68,18 @@ public class Study : MonoBehaviour
     IEnumerator DoStudy()
     {
         yield return WaitForPrompt("Welcome to the Study");
-        // yield return WaitForPrompt("Task 1: Navigation\n" +
-        //                            "Here you need to find audio sources as quickly as possible");
+        yield return WaitForPrompt("Task 1/2: Navigation\n" +
+                                   "Here you need to find audio sources as quickly as possible");
+        yield return DoNavigationScenario();
+        yield return WaitForPrompt("Task 2/2: Navigation\n" +
+                                   "Here you need to guess the position of the audio source without moving");
         yield return DoLocalizationScenario();
-        //yield return DoNavigationScenario();
         yield return WaitForPrompt("Completed Navigation Scenario 1");
         yield return WaitForPrompt("Export Data?");
         JsonData.Export(data);
     }
+
+    #region Localization
 
     IEnumerator DoLocalizationScenario()
     {
@@ -114,7 +118,7 @@ public class Study : MonoBehaviour
             /*------------------------------------------------*/
             map.mapPin.color = Color.clear;
             map.enabled = false;
-            
+
             scenario.tasks.Add(new LocalizationScenario.Task
             {
                 startTime = startTime,
@@ -155,6 +159,13 @@ public class Study : MonoBehaviour
         {
             while (Application.isPlaying)
             {
+                if (!map.IsFocused && chosenPosition is null)
+                    map.mapPin.color = Color.clear;
+                UI.Singleton.SideText = map.IsFocused
+                    ? chosenPosition is null
+                        ? "Click where you think the audio source is."
+                        : "\nHold [Space] to confirm your guess"
+                    : $"\nPress [{mapKey}] to open the map";
                 /*------------------------------------------------*/
                 yield return new WaitUntil(() => map.IsFocused);
                 yield return new WaitForNextFrameUnit();
@@ -183,16 +194,8 @@ public class Study : MonoBehaviour
         {
             while (Application.isPlaying)
             {
-                if (!map.IsFocused && chosenPosition is null)
-                    map.mapPin.color = Color.clear;
-                UI.Singleton.SideText = map.IsFocused
-                    ? chosenPosition is null
-                        ? "Click where you think the audio source is."
-                        : "\nHold [Space] to confirm your guess"
-                    : $"\nPress [{mapKey}] to open the map";
-                
                 // wait to prevent clash with player escape logic
-                var escapedLastFrame = Input.GetKeyDown(KeyCode.Escape);  
+                var escapedLastFrame = Input.GetKeyDown(KeyCode.Escape);
                 if (Input.GetKeyDown(mapKey))
                     map.IsFocused = !map.IsFocused;
                 /*------------------------------------------------*/
@@ -203,6 +206,9 @@ public class Study : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Navigation
 
     IEnumerator DoNavigationScenario()
     {
@@ -243,16 +249,6 @@ public class Study : MonoBehaviour
         }
     }
 
-    static IEnumerator WaitForPrompt(string message)
-    {
-        References.Paused = true;
-        Message(message);
-        /*------------------------------------------------*/
-        yield return UI.Singleton.Prompt(message);
-        /*------------------------------------------------*/
-        References.Paused = false;
-    }
-
     IEnumerator RecordNavFramesLoop(Action<NavigationScenario.Task.MetricsFrame> onNewFrame)
     {
         while (Application.isPlaying)
@@ -291,5 +287,17 @@ public class Study : MonoBehaviour
             }
 #endif
         }
+    }
+
+    #endregion
+
+    static IEnumerator WaitForPrompt(string message)
+    {
+        References.Paused = true;
+        Message(message);
+        /*------------------------------------------------*/
+        yield return UI.Singleton.Prompt(message);
+        /*------------------------------------------------*/
+        References.Paused = false;
     }
 }

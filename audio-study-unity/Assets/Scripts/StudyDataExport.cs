@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class StudyDataExport : MonoBehaviour
 {
-    [MenuItem("AudioStudy/Export", false, 1)]
+    [MenuItem("_Audio Study_/Export", false, 1)]
     static void ExportData()
     {
         if (SceneManager.GetActiveScene()
@@ -20,7 +20,7 @@ public class StudyDataExport : MonoBehaviour
         JsonData.Export(singleton.data);
     }
 
-    [MenuItem("AudioStudy/ExportExampleData", false, 1)]
+    [MenuItem("_Audio Study_/ExportExampleData", false, 1)]
     static void ExportExampleData()
     {
         var data = new StudyData();

@@ -39,7 +39,7 @@ public class DataAnalysis : MonoBehaviour
         return distance;
     }
     
-    [MenuItem("AudioStudy/AnalyzeDemoToExcel", false, 1)]
+    [MenuItem("_Audio Study_/AnalyzeDemoToExcel", false, 1)]
     public static void AnalyzeDemoToExcel()
     {
         if (JsonData.Import("DemoStudyData.json") is not {} data)
