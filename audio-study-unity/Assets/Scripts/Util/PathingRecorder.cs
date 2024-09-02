@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using SteamAudio;
 using UnityEngine;
-using Ray = UnityEngine.Ray;
 using Vector3 = UnityEngine.Vector3;
 
-public class PathingRecorder
+public class PathingRecorder : IDisposable
 {
     public static IEnumerator WaitForNextNavFrame(Action<NavigationTask.MetricsFrame> result)
     {
@@ -29,22 +28,31 @@ public class PathingRecorder
 
     public static IEnumerator WaitForPathingData(Action<List<Vector2>> result)
     {
-        var instance = new PathingRecorder();
-        SteamAudioManager.Singleton.PathingVisCallback += instance.PathingCallback;
+        using var pathingRecorder = new PathingRecorder();
         /*------------------------------------------------*/
         yield return new WaitForSeconds(SteamAudioSettings.Singleton.simulationUpdateInterval);
         /*------------------------------------------------*/
-        result(instance.GetSavedAudioPath());
-        SteamAudioManager.Singleton.PathingVisCallback -= instance.PathingCallback;
+        var audioPath = pathingRecorder.GetSavedAudioPath();
+
+#if UNITY_EDITOR
+        var pre = audioPath.FirstOrDefault();
+        foreach (var next in audioPath.Skip(1))
+        {
+            const float y = 3.0f;
+            Debug.DrawLine(pre.XZ(y), next.XZ(y), Color.magenta, 0.1f, true);
+            pre = next;
+        }
+#endif
+
+        result.Invoke(audioPath);
     }
 
-    PathingRecorder()
-    {
-    }
+    PathingRecorder() => SteamAudioManager.PathingVisCallback += AddPath;
+    public void Dispose() => SteamAudioManager.PathingVisCallback -= AddPath;
 
     List<(Vector3 From, Vector3 To)> _currentAudioPath = new();
 
-    void PathingCallback(SteamAudio.Vector3 from, SteamAudio.Vector3 to, Bool occluded, IntPtr userData) =>
+    void AddPath(SteamAudio.Vector3 from, SteamAudio.Vector3 to, Bool occluded, IntPtr userData) =>
         _currentAudioPath.Add((Common.ConvertVector(from), Common.ConvertVector(to)));
 
     List<Vector2> GetSavedAudioPath()

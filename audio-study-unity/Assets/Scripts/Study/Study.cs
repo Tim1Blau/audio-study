@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using SteamAudio;
 using Unity.VisualScripting;
@@ -12,12 +11,24 @@ using Random = UnityEngine.Random;
 /// Persistent Singleton spawned by StudySettings.Start() 
 public class Study : MonoBehaviour
 {
-    public List<string> scenes = new()
+    public StudyData data = new();
+
+    const string TutorialScene = "Tutorial";
+
+    readonly string[] _scenes =
     {
-        "Room1", "Room2", "Room3"
+        "Room1",
+        "Room2",
+        "Room3"
     };
 
-    public StudyData data = new();
+    readonly AudioConfiguration[] _audioConfigurations =
+    {
+        AudioConfiguration.Basic,
+        AudioConfiguration.Pathing,
+        AudioConfiguration.Mixed
+    };
+
 
     static bool _instantiated;
 
@@ -40,6 +51,7 @@ public class Study : MonoBehaviour
 
     IEnumerator Start()
     {
+        _audioConfigurations.Shuffle(); // observe random
         _exportPath = "StudyData"
                       + (Application.isEditor ? "_Editor" : "")
                       + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
@@ -49,49 +61,53 @@ public class Study : MonoBehaviour
     IEnumerator DoStudy()
     {
         yield return UI.WaitForPrompt("Welcome to the Study");
+        yield return UI.WaitForPrompt("Next: Tutorial");
+        References.Paused = true;
 
-        if (scenes.Count == 0)
+        yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
+        Export("Tutorial");
+        data.scenarios.Clear();
+        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin.");
+
+        var index = 0;
+        foreach (var (scene, audioConfig) in _scenes.Zip(_audioConfigurations, (s, a) => (s, a)))
         {
-            yield return DoScenario();
-        }
-        else
-        {
-            var index = 0;
-            foreach (var scene in scenes)
-            {
-                SceneManager.LoadScene(scene);
-                yield return new WaitForNextFrameUnit();
-                yield return DoScenario();
-                yield return UI.WaitForPrompt($"Finished scenario {++index}/{scenes.Count}");
-            }
+            yield return DoScenario(scene, audioConfig);
+
+            ++index;
+            Export($"Scenario {index}");
+            yield return UI.WaitForPrompt($"Finished scenario {index}/{_scenes.Length}");
         }
 
         Export("Final");
-        UI.Singleton.screenText.text = "Finished the Study";
+        UI.Singleton.screenText.text = "Completed the study!";
     }
 
-    IEnumerator DoScenario()
+    IEnumerator DoScenario(string scene, AudioConfiguration audioConfiguration)
     {
+        if (SceneManager.GetActiveScene().name != scene)
+        {
+            SceneManager.LoadScene(scene);
+            yield return new WaitForNextFrameUnit();
+        }
+
         var scenario = GenerateScenarioForCurrentScene();
         data.scenarios.Add(scenario);
 
-        Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
+        Setup(scenario.audioConfiguration = audioConfiguration);
 
         yield return Navigation.DoTasks(scenario.navigationTasks);
-        Export($"{data.scenarios.Count}-1");
-
         yield return Localization.DoTasks(scenario.localizationTasks);
-        Export($"{data.scenarios.Count}-2");
     }
 
     static void Setup(AudioConfiguration audioConfiguration)
     {
         var audio = References.Singleton.steamAudioSource;
-        (audio.transmission, audio.pathing) = audioConfiguration switch
+        (audio.transmission, audio.pathingMixLevel) = audioConfiguration switch
         {
-            AudioConfiguration.Basic   => (transmission: true, pathing: false),
-            AudioConfiguration.Pathing => (transmission: false, pathing: true),
-            AudioConfiguration.Mixed   => (transmission: true, pathing: true),
+            AudioConfiguration.Basic   => (transmission: true, pathing: 0),
+            AudioConfiguration.Pathing => (transmission: false, pathing: 1),
+            AudioConfiguration.Mixed   => (transmission: true, pathing: 1),
             _                          => throw new ArgumentOutOfRangeException()
         };
     }

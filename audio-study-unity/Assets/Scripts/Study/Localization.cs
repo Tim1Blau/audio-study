@@ -26,6 +26,7 @@ public static class Localization
             /*------------------------------------------------*/
             // yield return UI.WaitForPrompt($"Next: Localize audio source {index}/{tasks.Count} on the map");
             UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
+            UI.Singleton.bottomText.text = "";
             yield return UI.TakeABreak(seconds: 2.0f);
             UI.Singleton.screenText.text = "";
             /*------------------------------------------------*/

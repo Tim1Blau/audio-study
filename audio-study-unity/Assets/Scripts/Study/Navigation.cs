@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public static class Navigation
@@ -21,15 +20,14 @@ public static class Navigation
             ++index;
             References.PlayerPosition = task.listenerStartPosition.XZ();
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
-            /*------------------------------------------------*/
-            // yield return UI.WaitForPrompt(objectiveText);
-            UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
-            var objectiveText = $"Find audio source {index}/{tasks.Count}";
 
-            UI.Singleton.bottomText.text = objectiveText;
-            yield return UI.TakeABreak(seconds: 2.0f);
-            UI.Singleton.screenText.text = "";
+            UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
+            UI.Singleton.bottomText.text = "";
             /*------------------------------------------------*/
+            yield return UI.TakeABreak(seconds: 2.0f);
+            /*------------------------------------------------*/
+            UI.Singleton.screenText.text = "";
+            UI.Singleton.bottomText.text = $"Find audio source {index}/{tasks.Count}";
 
             task.startTime = References.Now;
             var recording = coroutineHolder.StartCoroutine(RecordNavFramesLoop(onNewFrame: task.frames.Add));
@@ -72,14 +70,6 @@ public static class Navigation
             // UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
             Debug.DrawLine(prevListenerPosition, References.PlayerPosition, new Color(1 - efficiency, efficiency, 0),
                 30f, true);
-
-            var pre = frame.audioPath.First();
-            foreach (var next in frame.audioPath.Skip(1))
-            {
-                const float y = 3.0f;
-                Debug.DrawLine(pre.XZ(y), next.XZ(y), Color.magenta, 0.1f, true);
-                pre = next;
-            }
 #endif
         }
     }

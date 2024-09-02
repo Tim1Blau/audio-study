@@ -47,8 +47,8 @@ namespace SteamAudio
         public int currentHRTF = 0;
 
 #if STEAMAUDIO_ENABLED
-        public PathingVisualizationCallback PathingVisCallback = null;
-        void OnPathingVis(Vector3 from, Vector3 to, Bool occluded, IntPtr userData) => PathingVisCallback?.Invoke(from, to, occluded, userData);
+        public static PathingVisualizationCallback PathingVisCallback = null;
+        static void OnPathingVis(Vector3 from, Vector3 to, Bool occluded, IntPtr userData) => PathingVisCallback?.Invoke(from, to, occluded, userData);
         
         public string[] hrtfNames = null;
 

@@ -17,6 +17,7 @@ public static class Utils
         v.y = y;
         return v;
     }
+
     public static Vector3 XZ(this Vector2 v, float y = 0f) => new(v.x, y, v.y);
 
     public static float Efficiency(Vector2 moveDir, Vector2 optimalDir)
@@ -24,6 +25,16 @@ public static class Utils
         if (moveDir.magnitude < 0.1f) return 0f;
         var angle01 = Vector2.Angle(moveDir, optimalDir) / 180f;
         return 1f - angle01 * 2f;
+    }
+
+    public static void Shuffle<T>(this T[] array)
+    {
+        var n = array.Length;
+        while (n > 1)
+        {
+            var k = Random.Range(0, n--);
+            (array[n], array[k]) = (array[k], array[n]);
+        }
     }
 }
 
