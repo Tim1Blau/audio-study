@@ -21,7 +21,7 @@ public static class Navigation
             UI.Singleton.bottomText.text = objectiveText;
 
             task.startTime = References.Now;
-            var recording = coroutineHolder.StartCoroutine(RecordNavFramesLoop(onNewFrame: task.metrics.Add));
+            var recording = coroutineHolder.StartCoroutine(RecordNavFramesLoop(onNewFrame: task.frames.Add));
             /*------------------------------------------------*/
             yield return new WaitUntil(() => HasFoundSource() || (Application.isEditor && Input.GetKeyDown(KeyCode.R)));
             /*------------------------------------------------*/

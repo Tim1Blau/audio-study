@@ -10,10 +10,10 @@ public class DataAnalysis : MonoBehaviour
 {
     public static IEnumerable<(NavigationTask.MetricsFrame frame, float Efficiency)> TaskEfficiency(NavigationTask task)
     {
-        if (task.metrics.Count == 0) yield break;
-        var lastFrame = task.metrics.First();
+        if (task.frames.Count == 0) yield break;
+        var lastFrame = task.frames.First();
         yield return (lastFrame, Efficiency: 0f); // initial efficiency is 0%
-        foreach (var frame in task.metrics.Skip(1))
+        foreach (var frame in task.frames.Skip(1))
         {
             yield return (
                 frame,
@@ -138,7 +138,7 @@ public static class XLUtils
                     row.Cell(cAudioPositionX).Value = task.audioPosition.x;
                     row.Cell(cAudioPositionY).Value = task.audioPosition.y;
 
-                    foreach (var metricsFrame in task.metrics)
+                    foreach (var metricsFrame in task.frames)
                     {
                     }
                 }

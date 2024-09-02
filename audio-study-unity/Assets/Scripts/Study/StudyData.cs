@@ -6,15 +6,15 @@ using UnityEngine;
 
 public enum AudioConfiguration
 {
-    Basic = 0, // Transmission, No Pathing
-    Pathing = 1, // Pathing, No Transmission
-    Mixed = 2 // Pathing & Transmission 
+    Basic,   // Transmission, No Pathing
+    Pathing, // Pathing, No Transmission
+    Mixed    // Pathing & Transmission 
 }
 
 [Serializable]
 public record StudyData
 {
-    public List<Scenario> scenarios = new ();
+    public List<Scenario> scenarios = new();
 }
 
 [Serializable]
@@ -22,8 +22,8 @@ public record Scenario
 {
     public AudioConfiguration audioConfiguration;
     public string scene = "";
-    public List<NavigationTask> navigationTasks = new ();
-    public List<LocalizationTask> localizationTasks = new ();
+    public List<NavigationTask> navigationTasks = new();
+    public List<LocalizationTask> localizationTasks = new();
 }
 
 [Serializable]
@@ -34,11 +34,10 @@ public record LocalizationTask
 
     public float startTime = -1;
     public float endTime = -1;
-    public Vector2 guessedPosition = Vector2.negativeInfinity;
+    public Vector2 guessedPosition = Vector2.zero;
     public List<Vector2> audioPath = new();
 }
-    
-    
+
 [Serializable]
 public record NavigationTask
 {
@@ -47,7 +46,7 @@ public record NavigationTask
 
     public float startTime = -1;
     public float endTime = -1;
-    public List<MetricsFrame> metrics = new();
+    public List<MetricsFrame> frames = new();
 
     [Serializable]
     public record MetricsFrame
