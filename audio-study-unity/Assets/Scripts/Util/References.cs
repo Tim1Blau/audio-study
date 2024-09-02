@@ -29,7 +29,7 @@ public class References : SingletonBehaviour<References>
 
     public static Player Player => Singleton.player;
 
-    public static float Now => Time.realtimeSinceStartup;
+    public static float Now => Time.realtimeSinceStartup; // TODO move to utils
 
     public static Vector3 PlayerPosition
     {

@@ -55,7 +55,6 @@ public class Study : MonoBehaviour
             }
         }
 
-        yield return UI.WaitForPrompt("Export Data?");
         JsonData.Export(data);
         UI.Singleton.screenText.text = "Finished the Study";
     }
@@ -67,13 +66,15 @@ public class Study : MonoBehaviour
 
         Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
 
-        yield return UI.WaitForPrompt(
-            "Task 1/2: Navigation\nHere you need to find audio sources as quickly as possible");
+        
         yield return Navigation.DoTasks(scenario.navigationTasks);
+        JsonData.Export(data);
 
         yield return UI.WaitForPrompt(
-            "Task 2/2: Navigation\nHere you need to guess the position of the audio source without moving");
+            "Task 2/2: Localization\n" +
+            "Guess the position of the audio source without moving");
         yield return Localization.DoTasks(scenario.localizationTasks);
+        JsonData.Export(data);
     }
 
     static void Setup(AudioConfiguration audioConfiguration)

@@ -8,17 +8,28 @@ public static class Navigation
 {
     public static IEnumerator DoTasks(List<NavigationTask> tasks)
     {
+        if (tasks.Count == 0) yield break;
+        References.PlayerPosition = tasks[0].listenerStartPosition.XZ(y: 0);
+        yield return UI.WaitForPrompt(
+            "Task 1/2: Navigation\n" +
+            "Find the audio source as quickly as possible");
+        
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();
         var index = 0;
         foreach (var task in tasks)
         {
+            ++index;
             References.PlayerPosition = task.listenerStartPosition.XZ(y: 0);
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
             /*------------------------------------------------*/
-            var objectiveText = $"Find audio source {++index}/{tasks.Count}";
-            yield return UI.WaitForPrompt(objectiveText);
-            /*------------------------------------------------*/
+            // yield return UI.WaitForPrompt(objectiveText);
+            UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
+            var objectiveText = $"Find audio source {index}/{tasks.Count}";
+
             UI.Singleton.bottomText.text = objectiveText;
+            yield return UI.TakeABreak(seconds: 2.0f);
+            UI.Singleton.screenText.text = "";
+            /*------------------------------------------------*/
 
             task.startTime = References.Now;
             var recording = coroutineHolder.StartCoroutine(RecordNavFramesLoop(onNewFrame: task.frames.Add));
@@ -58,7 +69,7 @@ public static class Navigation
                 optimalDir: frame.audioPath[^2] - frame.audioPath[^1]
             );
 
-            UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
+            // UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
             Debug.DrawLine(prevListenerPosition, References.PlayerPosition, new Color(1 - efficiency, efficiency, 0),
                 30f, true);
 
