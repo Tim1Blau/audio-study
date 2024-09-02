@@ -62,11 +62,9 @@ public static class JsonData
 {
     const string DefaultPath = "StudyData";
 
-    public static void Export(StudyData data, string path = DefaultPath, bool addDateToPath = true)
+    public static void Export(StudyData data, string path = DefaultPath)
     {
         var json = JsonUtility.ToJson(data, prettyPrint: Application.isEditor);
-        if (Application.isEditor) path += "_Editor";
-        if (addDateToPath) path += DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
         path += ".json";
         File.WriteAllText(path, json);
         Debug.Log($"Exported Data to {path}");

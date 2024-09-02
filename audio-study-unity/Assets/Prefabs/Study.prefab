@@ -379,7 +379,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   seed: 12345678
   locListenerPositions: 1
-  locSourcePositionsPerListenerPos: 1
+  locSourcePositionsPerListenerPos: 2
   locListenerDistances: 10
   locAudioDistances: 4
   navPositions: 4

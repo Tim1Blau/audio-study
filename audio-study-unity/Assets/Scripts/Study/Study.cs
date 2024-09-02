@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using SteamAudio;
 using Unity.VisualScripting;
@@ -20,6 +21,8 @@ public class Study : MonoBehaviour
 
     static bool _instantiated;
 
+    string _exportPath;
+
     public static void Initialize()
     {
         if (_instantiated) return;
@@ -30,10 +33,18 @@ public class Study : MonoBehaviour
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
-            JsonData.Export(data); // Backup Export
+            Export("Backup");
     }
 
-    IEnumerator Start() => DoStudy();
+    void Export(string stage) => JsonData.Export(data, _exportPath + " " + stage);
+
+    IEnumerator Start()
+    {
+        _exportPath = "StudyData"
+                      + (Application.isEditor ? "_Editor" : "")
+                      + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
+        return DoStudy();
+    }
 
     IEnumerator DoStudy()
     {
@@ -55,7 +66,7 @@ public class Study : MonoBehaviour
             }
         }
 
-        JsonData.Export(data);
+        Export("Final");
         UI.Singleton.screenText.text = "Finished the Study";
     }
 
@@ -66,13 +77,11 @@ public class Study : MonoBehaviour
 
         Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
 
-        
-        // yield return Navigation.DoTasks(scenario.navigationTasks);
-        JsonData.Export(data);
+        yield return Navigation.DoTasks(scenario.navigationTasks);
+        Export($"{data.scenarios.Count}-1");
 
-        
         yield return Localization.DoTasks(scenario.localizationTasks);
-        JsonData.Export(data);
+        Export($"{data.scenarios.Count}-2");
     }
 
     static void Setup(AudioConfiguration audioConfiguration)
