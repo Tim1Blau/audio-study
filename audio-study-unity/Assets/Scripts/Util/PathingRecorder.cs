@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SteamAudio;
 using UnityEngine;
+using Ray = UnityEngine.Ray;
 using Vector3 = UnityEngine.Vector3;
 
 public class PathingRecorder
@@ -18,7 +19,7 @@ public class PathingRecorder
                 new NavigationTask.MetricsFrame
                 {
                     time = References.Now,
-                    position = References.ListenerPosition.XZ(),
+                    position = References.PlayerPosition.XZ(),
                     rotation = new Vector2(rotation.y, rotation.x),
                     audioPath = res
                 }
@@ -36,29 +37,24 @@ public class PathingRecorder
         result(instance.GetSavedAudioPath());
         SteamAudioManager.Singleton.PathingVisCallback -= instance.PathingCallback;
     }
-    
-    private PathingRecorder(){}
+
+    PathingRecorder()
+    {
+    }
 
     List<(Vector3 From, Vector3 To)> _currentAudioPath = new();
 
-    void PathingCallback(SteamAudio.Vector3 from, SteamAudio.Vector3 to, Bool occluded, IntPtr userData)
-    {
+    void PathingCallback(SteamAudio.Vector3 from, SteamAudio.Vector3 to, Bool occluded, IntPtr userData) =>
         _currentAudioPath.Add((Common.ConvertVector(from), Common.ConvertVector(to)));
-    }
 
     List<Vector2> GetSavedAudioPath()
     {
-        var listenerPos = References.ListenerPosition;
+        var listenerPos = References.Singleton.listener.transform.position;
         var audioPos = References.AudioPosition;
 
         if (_currentAudioPath.Count == 0)
         {
-            if (Physics.RaycastAll(listenerPos, audioPos - listenerPos)
-                .Any(h => h.transform.TryGetComponent<SteamAudioStaticMesh>(out _)))
-            {
-                Debug.LogWarning("No path!?");
-            }
-
+            CheckError();
             return new List<Vector2> { audioPos.XZ(), listenerPos.XZ() };
         }
 
@@ -79,5 +75,17 @@ public class PathingRecorder
         if (res.Count >= 2) return res;
         Debug.LogError("audioPath has less than two elements");
         return new List<Vector2>();
+
+        void CheckError()
+        {
+            if (Physics.RaycastAll(listenerPos, audioPos - listenerPos, Vector3.Distance(audioPos, listenerPos))
+                    .Cast<RaycastHit?>()
+                    .FirstOrDefault(h => h!.Value.transform.TryGetComponent<SteamAudioStaticMesh>(out _)) is { } hit)
+            {
+                Debug.DrawRay(listenerPos, audioPos - listenerPos, Color.cyan, 0.5f);
+                Debug.DrawLine(listenerPos, hit.point, Color.red, 0.5f);
+                Debug.LogWarning("No path!?");
+            }
+        }
     }
 }

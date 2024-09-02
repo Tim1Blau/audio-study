@@ -7,11 +7,9 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[RequireComponent(typeof(SteamAudioStaticMesh), typeof(StudySettings))]
 public class SceneSetup : MonoBehaviour
 {
     [SerializeField] public Mesh mesh;
-    [SerializeField] public MeshFilter geometryObject;
 }
 
 #if UNITY_EDITOR
@@ -20,9 +18,8 @@ public class SceneSetupEditor : Editor
 {
     SceneSetup Config => (SceneSetup)target;
     
-    static void Err(string reason) => Debug.LogError("Failed to setup scene: " + reason);
     static void Log(string msg) => Debug.Log("Setting up scene: " + msg);
-    
+
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -39,7 +36,8 @@ public class SceneSetupEditor : Editor
             }
             catch (Exception e)
             {
-                Err(e.Message);
+                Log("FAIL");
+                Debug.LogException(e);
             }
         }
     }
@@ -47,32 +45,11 @@ public class SceneSetupEditor : Editor
     void SetMesh()
     {
         if (Config.mesh is not { } mesh)
-        {
-            Err("Mesh is not set");
-            return;
-        }
+            throw new Exception("Mesh is not set");
 
-        if (Config.geometryObject is not { } geo)
-        {
-            Err("GeometryObject is not set");
-            return;
-        }
-
-        if (geo.GetComponent<MeshCollider>() is not { } collider)
-        {
-            Err("GeometryObject has no MeshCollider");
-            return;
-        }
-
-        if (geo.GetComponent<MeshFilter>() is not { } filter)
-        {
-            Err("GeometryObject has no MeshCollider");
-            return;
-        }
-
-        collider.sharedMesh = filter.sharedMesh = mesh;
-        EditorUtility.SetDirty(collider);
-        EditorUtility.SetDirty(filter);
+        References.Singleton.roomMeshCollider.sharedMesh = References.Singleton.roomMeshFilter.sharedMesh = mesh;
+        EditorUtility.SetDirty(References.Singleton.roomMeshCollider);
+        EditorUtility.SetDirty(References.Singleton.roomMeshFilter);
         Log("Set Mesh");
     }
 
@@ -80,10 +57,8 @@ public class SceneSetupEditor : Editor
     {
         var scene = SceneManager.GetActiveScene();
 
-        if (Config.GetComponent<SteamAudioStaticMesh>() is not { } steamMesh)
-            throw new Exception("SteamAudioStaticMesh is not set");
-        steamMesh.asset = CreateAsset(ExportPaths.Scene);
-        EditorUtility.SetDirty(steamMesh);
+        References.Singleton.steamAudioStaticMesh.asset = CreateAsset(ExportPaths.Scene);
+        EditorUtility.SetDirty(References.Singleton.steamAudioStaticMesh);
         Log("Created Scene Asset");
         SteamAudioManager.ExportScene(scene, false);
         Log("Exported Scene Asset");
@@ -93,7 +68,7 @@ public class SceneSetupEditor : Editor
     {
         var scene = SceneManager.GetActiveScene();
 
-        var probes = References.ProbeBatch;
+        var probes = References.Singleton.probeBatch;
         probes.asset = CreateAsset(ExportPaths.Probes);
         EditorUtility.SetDirty(probes);
         Log("Created Probe Asset");

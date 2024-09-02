@@ -4,45 +4,47 @@ using SteamAudio;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
+using Scene = UnityEngine.SceneManagement.Scene;
 using Vector3 = UnityEngine.Vector3;
 
 public static class ExportPaths
 {
-    public static string Scene => SceneManager.GetActiveScene().path[..^".asset".Length] + "_Export.asset";
-    public static string Probes => SceneManager.GetActiveScene().path[..^".asset".Length] + "_Probes.asset";
+    public static string Scene => SceneManager.GetActiveScene().ExportPath("_Scene.asset");
+    public static string Probes => SceneManager.GetActiveScene().ExportPath("_Probes.asset");
+
+    static string ExportPath(this Scene scene, string ending) =>
+        string.Join(null,scene.path[..^(".asset".Length + scene.name.Length)], "Export/", scene.name, ending);
 }
 
 public class References : SingletonBehaviour<References>
 {
-    [SerializeField] SteamAudioSource steamAudioSource;
-    [SerializeField] AudioSource audioSource;
-    [SerializeField] SteamAudioProbeBatch probeBatch;
-    [SerializeField] SteamAudioListener listener;
-    [SerializeField] Player player;
+    [SerializeField] public SteamAudioSource steamAudioSource;
+    [SerializeField] public AudioSource audioSource;
+    [SerializeField] public SteamAudioProbeBatch probeBatch;
+    [SerializeField] public SteamAudioListener listener;
+    [SerializeField] public Player player;
+    [SerializeField] public MeshFilter roomMeshFilter;
+    [SerializeField] public MeshCollider roomMeshCollider;
+    [SerializeField] public SteamAudioStaticMesh steamAudioStaticMesh;
 
-    public static SteamAudioSource SteamAudioSource => Singleton.steamAudioSource;
-    public static AudioSource AudioSource => Singleton.audioSource;
-    public static SteamAudioProbeBatch ProbeBatch => Singleton.probeBatch;
-    public static SteamAudioListener Listener => Singleton.listener;
     public static Player Player => Singleton.player;
 
     public static float Now => Time.realtimeSinceStartup;
 
-    public static Vector3 ListenerPosition
+    public static Vector3 PlayerPosition
     {
-        get => Listener.transform.position;
+        get => Singleton.player.transform.position;
         set
         {
-            Listener.transform.position = value;
+            Singleton.player.transform.position = value;
             Physics.SyncTransforms();
         }
     }
 
     public static Vector3 AudioPosition
     {
-        get => SteamAudioSource.transform.position;
-        set => SteamAudioSource.transform.position = value;
+        get => Singleton.steamAudioSource.transform.position;
+        set => Singleton.steamAudioSource.transform.position = value;
     }
 
     public static bool Paused
@@ -52,8 +54,8 @@ public class References : SingletonBehaviour<References>
         {
             if (Paused == value) return;
             Player.canMove = !value;
-            if (Paused) AudioSource.Pause();
-            else AudioSource.UnPause();
+            if (Paused) Singleton.audioSource.Pause();
+            else Singleton.audioSource.UnPause();
         }
     }
 
@@ -84,12 +86,24 @@ public class References : SingletonBehaviour<References>
             if (listener is null) yield return "Listener is null";
         }
     }
-#endif       
+#endif
 }
 
 public class SingletonBehaviour<T> : MonoBehaviour where T : SingletonBehaviour<T>
 {
-    public static T Singleton { get; private set; }
+    static T _singleton;
+
+    public static T Singleton
+    {
+        get
+        {
+            if (_singleton == null)
+                _singleton = FindObjectOfType<T>() ??
+                             throw new Exception("There is no References object in the scene.");
+            return _singleton;
+        }
+        private set => _singleton = value;
+    }
 
     protected void Awake()
     {

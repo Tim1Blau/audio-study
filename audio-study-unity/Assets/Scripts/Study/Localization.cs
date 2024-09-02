@@ -16,10 +16,11 @@ public static class Localization
         {
             ++index;
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
-            References.ListenerPosition = task.listenerPosition.XZ(y: 0);
+            References.PlayerPosition = task.listenerPosition.XZ(y: 0);
             /*------------------------------------------------*/
             yield return UI.WaitForPrompt($"Next: Localize audio source {index}/{tasks.Count} on the map");
             /*------------------------------------------------*/
+            References.Player.canMove = false;
             map.enabled = true;
             map.IsFocused = false;
 

@@ -12,7 +12,7 @@ public static class Navigation
         var index = 0;
         foreach (var task in tasks)
         {
-            References.ListenerPosition = task.listenerStartPosition.XZ(y: 0);
+            References.PlayerPosition = task.listenerStartPosition.XZ(y: 0);
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
             /*------------------------------------------------*/
             var objectiveText = $"Find audio source {++index}/{tasks.Count}";
@@ -29,7 +29,7 @@ public static class Navigation
             task.endTime = References.Now;
 
             bool HasFoundSource() =>
-                Vector3.Distance(References.ListenerPosition, References.AudioPosition) <
+                Vector3.Distance(References.PlayerPosition, References.AudioPosition) <
                 StudySettings.Singleton.foundSourceDistance;
         }
     }
@@ -38,7 +38,7 @@ public static class Navigation
     {
         while (Application.isPlaying)
         {
-            var prevListenerPosition = References.ListenerPosition;
+            var prevListenerPosition = References.PlayerPosition;
             /*------------------------------------------------*/
             NavigationTask.MetricsFrame frame = default;
             yield return PathingRecorder.WaitForNextNavFrame(res => frame = res);
@@ -54,12 +54,12 @@ public static class Navigation
 
 #if UNITY_EDITOR
             var efficiency = Utils.Efficiency(
-                moveDir: (References.ListenerPosition - prevListenerPosition).XZ(),
+                moveDir: (References.PlayerPosition - prevListenerPosition).XZ(),
                 optimalDir: frame.audioPath[^2] - frame.audioPath[^1]
             );
 
             UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
-            Debug.DrawLine(prevListenerPosition, References.ListenerPosition, new Color(1 - efficiency, efficiency, 0),
+            Debug.DrawLine(prevListenerPosition, References.PlayerPosition, new Color(1 - efficiency, efficiency, 0),
                 30f, true);
 
             var pre = frame.audioPath.First();

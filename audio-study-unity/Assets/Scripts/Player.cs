@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    public CharacterController _characterController;
+    CharacterController _characterController;
     Vector2 _rotation;
 
     void Start()
@@ -29,7 +29,6 @@ public class Player : MonoBehaviour
         _rotation = camera.transform.localRotation.eulerAngles;
     }
     
-    public bool shouldTeleport = false;
 
     void LateUpdate()
     {
@@ -50,7 +49,6 @@ public class Player : MonoBehaviour
         var moveDir = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveDir = camera.transform.localRotation * moveDir;
         moveDir.y = 0.0f;
-        if(!shouldTeleport)_characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
-        else shouldTeleport = false;
+        _characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
     }
 }

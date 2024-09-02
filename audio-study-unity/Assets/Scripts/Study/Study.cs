@@ -11,7 +11,11 @@ using Random = UnityEngine.Random;
 /// Persistent Singleton spawned by StudySettings.Start() 
 public class Study : MonoBehaviour
 {
-    public List<UnityEngine.SceneManagement.Scene> scenes = new();
+    public List<string> scenes = new()
+    {
+        "Room1", "Room2", "Room3"
+    };
+
     public StudyData data = new();
 
     static bool _instantiated;
@@ -25,7 +29,7 @@ public class Study : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P)) 
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
             JsonData.Export(data); // Backup Export
     }
 
@@ -35,42 +39,53 @@ public class Study : MonoBehaviour
     {
         yield return UI.WaitForPrompt("Welcome to the Study");
 
-        if (scenes.Count == 0) scenes.Add(SceneManager.GetActiveScene());
-        foreach (var scene in scenes)
+        if (scenes.Count == 0)
         {
-            SceneManager.LoadScene(scene.name);
-            var scenario = GenerateScenarioForCurrentScene();
-            data.scenarios.Add(scenario);
-
-            Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
-
-            yield return new WaitForNextFrameUnit();
-            yield return UI.WaitForPrompt(
-                "Task 1/2: Navigation\nHere you need to find audio sources as quickly as possible");
-            yield return Navigation.DoTasks(scenario.navigationTasks);
-
-            yield return UI.WaitForPrompt(
-                "Task 2/2: Navigation\nHere you need to guess the position of the audio source without moving");
-            yield return Localization.DoTasks(scenario.localizationTasks);
+            yield return DoScenario();
+        }
+        else
+        {
+            var index = 0;
+            foreach (var scene in scenes)
+            {
+                SceneManager.LoadScene(scene);
+                yield return new WaitForNextFrameUnit();
+                yield return DoScenario();
+                yield return UI.WaitForPrompt($"Finished scenario {++index}/{scenes.Count}");
+            }
         }
 
         yield return UI.WaitForPrompt("Export Data?");
         JsonData.Export(data);
+        UI.Singleton.screenText.text = "Finished the Study";
+    }
+
+    IEnumerator DoScenario()
+    {
+        var scenario = GenerateScenarioForCurrentScene();
+        data.scenarios.Add(scenario);
+
+        Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
+
+        yield return UI.WaitForPrompt(
+            "Task 1/2: Navigation\nHere you need to find audio sources as quickly as possible");
+        yield return Navigation.DoTasks(scenario.navigationTasks);
+
+        yield return UI.WaitForPrompt(
+            "Task 2/2: Navigation\nHere you need to guess the position of the audio source without moving");
+        yield return Localization.DoTasks(scenario.localizationTasks);
     }
 
     static void Setup(AudioConfiguration audioConfiguration)
     {
-        switch (audioConfiguration)
+        var audio = References.Singleton.steamAudioSource;
+        (audio.transmission, audio.pathing) = audioConfiguration switch
         {
-            case AudioConfiguration.Basic:
-                break;
-            case AudioConfiguration.Pathing:
-                break;
-            case AudioConfiguration.Mixed:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+            AudioConfiguration.Basic   => (transmission: true, pathing: false),
+            AudioConfiguration.Pathing => (transmission: false, pathing: true),
+            AudioConfiguration.Mixed   => (transmission: true, pathing: true),
+            _                          => throw new ArgumentOutOfRangeException()
+        };
     }
 
     static Scenario GenerateScenarioForCurrentScene()
@@ -78,7 +93,7 @@ public class Study : MonoBehaviour
         var settings = StudySettings.Singleton;
         var scene = SceneManager.GetActiveScene();
         Random.InitState(settings.seed);
-        var positions = References.ProbeBatch.ProbeSpheres.Select(p => p.center)
+        var positions = References.Singleton.probeBatch.ProbeSpheres.Select(p => p.center)
             .Select(x => Common.ConvertVector(x).XZ()).ToArray();
 
         return new Scenario
