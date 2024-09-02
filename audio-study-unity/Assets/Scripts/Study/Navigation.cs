@@ -9,7 +9,7 @@ public static class Navigation
     public static IEnumerator DoTasks(List<NavigationTask> tasks)
     {
         if (tasks.Count == 0) yield break;
-        References.PlayerPosition = tasks[0].listenerStartPosition.XZ(y: 0);
+        References.PlayerPosition = tasks[0].listenerStartPosition.XZ();
         yield return UI.WaitForPrompt(
             "Task 1/2: Navigation\n" +
             "Find the audio source as quickly as possible");
@@ -19,7 +19,7 @@ public static class Navigation
         foreach (var task in tasks)
         {
             ++index;
-            References.PlayerPosition = task.listenerStartPosition.XZ(y: 0);
+            References.PlayerPosition = task.listenerStartPosition.XZ();
             References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
             /*------------------------------------------------*/
             // yield return UI.WaitForPrompt(objectiveText);

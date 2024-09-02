@@ -67,12 +67,10 @@ public class Study : MonoBehaviour
         Setup(scenario.audioConfiguration = AudioConfiguration.Pathing);
 
         
-        yield return Navigation.DoTasks(scenario.navigationTasks);
+        // yield return Navigation.DoTasks(scenario.navigationTasks);
         JsonData.Export(data);
 
-        yield return UI.WaitForPrompt(
-            "Task 2/2: Localization\n" +
-            "Guess the position of the audio source without moving");
+        
         yield return Localization.DoTasks(scenario.localizationTasks);
         JsonData.Export(data);
     }

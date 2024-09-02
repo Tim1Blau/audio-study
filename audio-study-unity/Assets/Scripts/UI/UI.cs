@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -7,10 +8,9 @@ public class UI : SingletonBehaviour<UI>
 {
     [SerializeField] public Text screenText;
     [SerializeField] public Text bottomText;
-    [SerializeField] Slider progressSlider;
-
-    [SerializeField] float pressToConfirmSeconds = 0.5f;
-
+    [SerializeField] Slider breakProgress;
+    [SerializeField] Slider confirmProgress;
+    
     new void Awake()
     {
         base.Awake();
@@ -19,14 +19,15 @@ public class UI : SingletonBehaviour<UI>
 
     void Start()
     {
-        progressSlider.gameObject.SetActive(false);
+        breakProgress.gameObject.SetActive(false);
+        confirmProgress.gameObject.SetActive(false);
     }
 
     public static IEnumerator TakeABreak(float seconds)
     {
         if (seconds <= 0) yield break;
         var start = References.Now;
-        var slider = Singleton.progressSlider;
+        var slider = Singleton.breakProgress;
         References.Paused = true;
         slider.gameObject.SetActive(true);
         slider.value = 0;
@@ -54,23 +55,32 @@ public class UI : SingletonBehaviour<UI>
     IEnumerator Prompt(string message)
     {
         screenText.text = message;
-        bottomText.text = "[Hold space to continue]";
-        yield return WaitForKeyHold(KeyCode.Space, Application.isEditor ? KeyCode.X : KeyCode.None);
+        bottomText.text = $"[Hold {StudySettings.Singleton.confirmKey} to continue]";
+        yield return WaitForKeyHold(StudySettings.Singleton.confirmKey);
         bottomText.text = screenText.text = "";
     }
 
-    public static IEnumerator WaitForKeyHold(KeyCode keyCode, KeyCode skip = KeyCode.None)
+    public static IEnumerator WaitForKeyHold(KeyCode keyCode, Action onFinished = null)
     {
+        var progress = Singleton.confirmProgress;
+        yield return new WaitUntil(() => !Input.GetKey(keyCode));
+        yield return new WaitUntil(() => Input.GetKey(keyCode));
+
         while (Application.isPlaying)
         {
-            yield return new WaitUntil(() => Input.GetKeyDown(keyCode) || Input.GetKey(skip));
-            if (Input.GetKey(skip))
-                break;
+            yield return new WaitUntil(() => Input.GetKeyDown(keyCode));
+            progress.gameObject.SetActive(true);
             var pressStart = References.Now;
-            yield return new WaitUntil(() =>
-                !Input.GetKey(keyCode) || References.Now - pressStart > Singleton.pressToConfirmSeconds);
+            while (Input.GetKey(keyCode) && References.Now - pressStart < StudySettings.Singleton.pressToConfirmSeconds)
+            {
+                yield return new WaitForNextFrameUnit();
+                progress.value = (References.Now - pressStart) / StudySettings.Singleton.pressToConfirmSeconds;
+            }
+            
+            progress.gameObject.SetActive(false);
             if (Input.GetKey(keyCode))
                 break;
         }
+        onFinished?.Invoke();
     }
 }

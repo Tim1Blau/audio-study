@@ -16,6 +16,8 @@ public class StudySettings : SingletonBehaviour<StudySettings>
     public float foundSourceDistance = 1.0f;
     public float spawnHeight = 1.5f;
     public KeyCode mapKey = KeyCode.E;
+    public KeyCode confirmKey = KeyCode.Space;
+    public float pressToConfirmSeconds = 0.5f;
     
     void Start() => Study.Initialize();
 }

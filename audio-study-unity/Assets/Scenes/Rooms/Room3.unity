@@ -7118,12 +7118,13 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6156325486848057447, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
-      propertyPath: m_Text
-      value: 'Task 1: Navigation
-
-        Here you need to find audio sources as
-        quickly as possible'
+    - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8588190076204190805, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x

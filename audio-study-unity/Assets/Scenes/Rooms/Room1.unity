@@ -190,10 +190,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Study
       objectReference: {fileID: 0}
-    - target: {fileID: 2877759110140780757, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
-      propertyPath: m_audioClip
-      value: 
-      objectReference: {fileID: 8300000, guid: cbb1dafcee8e91b44a75b459bd02b3f3, type: 3}
     - target: {fileID: 3668457875475837104, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
@@ -6205,6 +6201,22 @@ PrefabInstance:
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0.96
+      objectReference: {fileID: 0}
+    - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588190076204190805, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588190076204190805, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
