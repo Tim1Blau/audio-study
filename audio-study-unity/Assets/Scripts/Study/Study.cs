@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SteamAudio;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
@@ -61,22 +62,14 @@ public class Study : MonoBehaviour
     IEnumerator DoStudy()
     {
         yield return UI.WaitForPrompt("Welcome to the Study");
-        yield return UI.WaitForPrompt("Next: Tutorial");
-        References.Paused = true;
 
         yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
-        Export("Tutorial");
         data.scenarios.Clear();
         yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin.");
 
-        var index = 0;
         foreach (var (scene, audioConfig) in _scenes.Zip(_audioConfigurations, (s, a) => (s, a)))
         {
             yield return DoScenario(scene, audioConfig);
-
-            ++index;
-            Export($"Scenario {index}");
-            yield return UI.WaitForPrompt($"Finished scenario {index}/{_scenes.Length}");
         }
 
         Export("Final");
@@ -90,14 +83,20 @@ public class Study : MonoBehaviour
             SceneManager.LoadScene(scene);
             yield return new WaitForNextFrameUnit();
         }
+        References.AudioPaused = true;
+        
+        var objectiveText = UI.Singleton.scenarioText.text = $"Scene: {scene}\nAudio config: {(int) audioConfiguration}";
 
-        var scenario = GenerateScenarioForCurrentScene();
+        var scenario = StudySettings.Singleton.GenerateScenario();
         data.scenarios.Add(scenario);
+        if (scenario.navigationTasks.Count + scenario.localizationTasks.Count == 0) yield break;
 
         Setup(scenario.audioConfiguration = audioConfiguration);
+        yield return UI.WaitForPrompt(objectiveText);
 
         yield return Navigation.DoTasks(scenario.navigationTasks);
         yield return Localization.DoTasks(scenario.localizationTasks);
+        Export($"{scene}-{(int) audioConfiguration}");
     }
 
     static void Setup(AudioConfiguration audioConfiguration)
@@ -112,61 +111,4 @@ public class Study : MonoBehaviour
         };
     }
 
-    static Scenario GenerateScenarioForCurrentScene()
-    {
-        var settings = StudySettings.Singleton;
-        var scene = SceneManager.GetActiveScene();
-        Random.InitState(settings.seed);
-        var positions = References.Singleton.probeBatch.ProbeSpheres.Select(p => p.center)
-            .Select(x => Common.ConvertVector(x).XZ()).ToArray();
-
-        return new Scenario
-        {
-            scene = scene.name,
-            navigationTasks =
-                Pairwise(RandomAudioPositions(settings.navPositions + 1, settings.navAudioDistances).ToList())
-                    .Select(fromTo =>
-                        new NavigationTask
-                        {
-                            listenerStartPosition = fromTo.Item1,
-                            audioPosition = fromTo.Item2,
-                        }
-                    ).ToList(),
-            localizationTasks =
-                RandomAudioPositions(settings.locListenerPositions, settings.locListenerDistances)
-                    .SelectMany(listenerPosition =>
-                        Enumerable.Range(0, settings.locSourcePositionsPerListenerPos)
-                            .Select(_ => RandomPosWithMinDistance(listenerPosition, settings.locAudioDistances))
-                            .Select(audioPos =>
-                                new LocalizationTask
-                                {
-                                    listenerPosition = listenerPosition,
-                                    audioPosition = audioPos,
-                                }
-                            )
-                    ).ToList()
-        };
-
-        IEnumerable<Vector2> RandomAudioPositions(int count, float minDistance)
-        {
-            var start = new Vector2(-100, -100);
-            for (var i = 0; i < count; i++)
-                yield return start = RandomPosWithMinDistance(start, minDistance);
-        }
-
-        Vector2 RandomPosWithMinDistance(Vector2 from, float minDistance)
-        {
-            var distanceFiltered = positions.Where(v => Vector2.Distance(from, v) > minDistance)
-                .ToArray();
-            if (distanceFiltered.Length != 0) return RandomIndex(distanceFiltered);
-            Debug.LogWarning(
-                $"No available positions further than the min distance {minDistance}m away from the listener");
-            return RandomIndex(positions);
-        }
-
-        static IEnumerable<(T, T)> Pairwise<T>(IReadOnlyCollection<T> input) =>
-            input.Zip(input.Skip(1), (a, b) => (a, b));
-
-        static Vector2 RandomIndex(Vector2[] l) => l[Random.Range(0, l.Length - 1)]; // Note: ignore empty case
-    }
 }

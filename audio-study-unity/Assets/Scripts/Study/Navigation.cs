@@ -8,23 +8,25 @@ public static class Navigation
     public static IEnumerator DoTasks(List<NavigationTask> tasks)
     {
         if (tasks.Count == 0) yield break;
-        References.PlayerPosition = tasks[0].listenerStartPosition.XZ();
+        References.PlayerPosition = tasks[0].listenerStartPosition;
         yield return UI.WaitForPrompt(
             "Task 1/2: Navigation\n" +
             "Find the audio source as quickly as possible");
-        
+
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();
         var index = 0;
         foreach (var task in tasks)
         {
             ++index;
-            References.PlayerPosition = task.listenerStartPosition.XZ();
-            References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
+            References.PlayerPosition = task.listenerStartPosition;
+            References.AudioPosition = task.audioPosition;
 
             UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
             UI.Singleton.bottomText.text = "";
             /*------------------------------------------------*/
-            yield return UI.TakeABreak(seconds: 2.0f);
+            References.PlayerAndAudioPaused = true;
+            yield return UI.WaitForSeconds(2.0f);
+            References.PlayerAndAudioPaused = false;
             /*------------------------------------------------*/
             UI.Singleton.screenText.text = "";
             UI.Singleton.bottomText.text = $"Find audio source {index}/{tasks.Count}";
@@ -36,10 +38,11 @@ public static class Navigation
             /*------------------------------------------------*/
             coroutineHolder.StopCoroutine(recording);
             task.endTime = References.Now;
+            continue;
 
             bool HasFoundSource() =>
-                Vector3.Distance(References.PlayerPosition, References.AudioPosition) <
-                StudySettings.Singleton.foundSourceDistance;
+                Vector2.Distance(References.PlayerPosition, References.AudioPosition) <
+                StudySettings.FoundSourceDistance;
         }
     }
 
@@ -63,12 +66,13 @@ public static class Navigation
 
 #if UNITY_EDITOR
             var efficiency = Utils.Efficiency(
-                moveDir: (References.PlayerPosition - prevListenerPosition).XZ(),
+                moveDir: References.PlayerPosition - prevListenerPosition,
                 optimalDir: frame.audioPath[^2] - frame.audioPath[^1]
             );
 
             // UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";
-            Debug.DrawLine(prevListenerPosition, References.PlayerPosition, new Color(1 - efficiency, efficiency, 0),
+            Debug.DrawLine(prevListenerPosition.XZ(1), References.PlayerPosition.XZ(1),
+                new Color(1 - efficiency, efficiency, 0),
                 30f, true);
 #endif
         }

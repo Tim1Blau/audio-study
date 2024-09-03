@@ -34,7 +34,7 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             ShowMouse = true;
-        else if (Input.GetMouseButtonDown(0) && !LocalizationMap.Singleton.IsFocused)
+        else if (Input.GetMouseButtonDown(0) && !Map.Singleton.IsFocused)
             ShowMouse = false;
         // Rotation.
         if (!ShowMouse)

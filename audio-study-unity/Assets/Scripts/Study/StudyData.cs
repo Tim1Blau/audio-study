@@ -6,9 +6,9 @@ using UnityEngine;
 
 public enum AudioConfiguration
 {
-    Basic,   // Transmission, No Pathing
-    Pathing, // Pathing, No Transmission
-    Mixed    // Pathing & Transmission 
+    Basic = 0,   // Transmission, No Pathing
+    Pathing = 1, // Pathing, No Transmission
+    Mixed = 2    // Pathing & Transmission 
 }
 
 [Serializable]

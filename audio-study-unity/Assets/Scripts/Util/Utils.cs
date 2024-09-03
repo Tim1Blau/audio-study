@@ -36,6 +36,12 @@ public static class Utils
             (array[n], array[k]) = (array[k], array[n]);
         }
     }
+    
+    public static IEnumerable<(T, T)> Pairwise<T>(this IReadOnlyCollection<T> input) =>
+        input.Zip(input.Skip(1), (a, b) => (a, b));
+
+    public static T? RandomIndex<T>(this IReadOnlyList<T> l) where T: struct =>
+        l.Count == 0 ? default : l[Random.Range(0, l.Count - 1)];
 }
 
 

@@ -3,74 +3,94 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public static class Localization
 {
     public static IEnumerator DoTasks(List<LocalizationTask> tasks)
     {
         if (tasks.Count == 0) yield break;
-        var map = LocalizationMap.Singleton;
-        map.enabled = false;
-        References.PlayerPosition = tasks[0].listenerPosition.XZ();
+        Map.enabled = false;
+        References.PlayerPosition = tasks[0].listenerPosition;
         yield return UI.WaitForPrompt(
-            "Task 2/2: Localization\n" +
-            "Guess the position of the audio source without moving");
+            "Task 2/2: Localization\n"
+            + "Guess the position of the audio source without moving\n");
+        References.Player.canMove = false;
+        Map.enabled = true;
 
         var index = 0;
         foreach (var task in tasks)
         {
             ++index;
-            References.AudioPosition = task.audioPosition.XZ(y: StudySettings.Singleton.spawnHeight);
-            References.PlayerPosition = task.listenerPosition.XZ();
-            /*------------------------------------------------*/
-            // yield return UI.WaitForPrompt($"Next: Localize audio source {index}/{tasks.Count} on the map");
+            Map.IsFocused = false;
+            References.PlayerPosition = task.listenerPosition;
+            // BREAK //
             UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
             UI.Singleton.bottomText.text = "";
-            yield return UI.TakeABreak(seconds: 2.0f);
-            UI.Singleton.screenText.text = "";
+            References.AudioPaused = true;
+            yield return UI.WaitForSeconds(2.0f);
             /*------------------------------------------------*/
-            References.Player.canMove = false;
-            map.enabled = true;
-            map.IsFocused = false;
-
+            // REFERENCES //
+            yield return ShowReferencePositions();
+            /*------------------------------------------------*/
+            // BREAK //
+            References.AudioPaused = true;
+            UI.Singleton.screenText.text = "Next: Localize";
+            yield return UI.WaitForSeconds(2.0f);
+            /*------------------------------------------------*/
+            // LOCALIZATION //
+            References.AudioPaused = false;
+            References.AudioPosition = task.audioPosition;
+            Map.IsFocused = false;
             UI.Singleton.screenText.text = $"Localize the audio source on the map";
-
             task.startTime = References.Now;
             /*------------------------------------------------*/
-            Vector3 localizedPosition = default;
-            yield return WaitForSoundLocalized(res => localizedPosition = res);
+            yield return WaitForSoundLocalized(res => task.guessedPosition = res.XZ());
             /*------------------------------------------------*/
-            /*------------------------------------------------*/
-            List<Vector2> audioPath = default;
-            yield return PathingRecorder.WaitForPathingData(res => audioPath = res);
+            yield return PathingRecorder.WaitForPathingData(res => task.audioPath = res);
             /*------------------------------------------------*/
             task.endTime = References.Now;
-            task.guessedPosition = localizedPosition.XZ();
-            task.audioPath = audioPath;
+            // DISPLAY ACTUAL POSITION //
+            yield return ShowCorrectPosition(task.audioPosition);
             /*------------------------------------------------*/
-            yield return DisplayActualPosition(task.audioPosition);
-            /*------------------------------------------------*/
-            map.mapPin.color = Color.clear;
-            map.enabled = false;
+            Map.mapPin.color = Color.clear;
+        }
 
-#if UNITY_EDITOR
-            Debug.Log($"Localized Position {localizedPosition}");
-            Debug.Log($"Audio Position {task.audioPosition}");
-            Debug.Log($"Distance to source {Vector2.Distance(task.guessedPosition, task.audioPosition)}");
-#endif
+        Map.enabled = false;
+    }
+
+    static Map Map => Map.Singleton;
+
+    static IEnumerator ShowReferencePositions()
+    {
+        Map.enabled = true;
+        Map.IsFocused = false;
+        UI.Singleton.screenText.text = "Reference Positions..."
+                                       + "\nTip: Pay attention to direction and volume changes";
+        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.NumLocPrimingPositions,
+            StudySettings.Singleton.locAudioDistances);
+        foreach (var position in referencePositions)
+        {
+            Map.mapPin.color = Color.green;
+            References.AudioPaused = false;
+            Map.mapPin.transform.position = position.XZ();
+            References.AudioPosition = position;
+            yield return UI.WaitForSeconds(StudySettings.LocPrimingPositionDuration);
+            /*------------------------------------------------*/
+            Map.mapPin.color = Color.clear;
+            References.AudioPaused = true;
+            yield return new WaitForSeconds(0.2f);
+            /*------------------------------------------------*/
         }
     }
 
-    static IEnumerator DisplayActualPosition(Vector2 position)
+    static IEnumerator ShowCorrectPosition(Vector2 position)
     {
         const float seconds = 0.9f;
         const float beepDuration = 0.1f;
-        var map = LocalizationMap.Singleton;
-        map.mapPin.transform.position = position.XZ();
+        Map.mapPin.transform.position = position.XZ();
         for (var i = 0; i < seconds / beepDuration; i++)
         {
-            map.mapPin.color = i % 2 == 0 ? Color.green : Color.black;
+            Map.mapPin.color = i % 2 == 0 ? Color.green : Color.black;
             yield return new WaitForSeconds(beepDuration);
         }
     }
@@ -78,7 +98,6 @@ public static class Localization
     static IEnumerator WaitForSoundLocalized(Action<Vector3> result)
     {
         var co = UnityEngine.Object.FindObjectOfType<Study>();
-        var map = LocalizationMap.Singleton;
 
         Vector3? chosenPosition = null;
 
@@ -87,24 +106,25 @@ public static class Localization
         var confirmed = false;
         while (!confirmed)
         {
-            if (chosenPosition is null) map.mapPin.color = Color.clear;
-            UI.Singleton.bottomText.text = $"\nPress [{StudySettings.Singleton.mapKey}] to open the map";
+            if (chosenPosition is null) Map.mapPin.color = Color.clear;
+            UI.Singleton.bottomText.text = $"\nPress [{StudySettings.MapKey}] to open the map";
             /*------------------------------------------------*/
-            yield return new WaitUntil(() => map.IsFocused);
+            yield return new WaitUntil(() => Map.IsFocused);
             /*------------------------------------------------*/
             var choseLocation = co.StartCoroutine(MapInteractionLoop());
 
             /*------------------------------------------------*/
-            yield return new WaitUntil(() => chosenPosition.HasValue || !map.IsFocused);
+            yield return new WaitUntil(() => chosenPosition.HasValue || !Map.IsFocused);
             /*------------------------------------------------*/
-            if (map.IsFocused)
+            if (Map.IsFocused)
             {
                 /*------------------------------------------------*/
                 var hold = co.StartCoroutine(UI.WaitForKeyHold(KeyCode.Space, onFinished: () => confirmed = true));
-                yield return new WaitUntil(() => !map.IsFocused || confirmed);
+                yield return new WaitUntil(() => !Map.IsFocused || confirmed);
                 co.StopCoroutine(hold);
                 /*------------------------------------------------*/
             }
+
             co.StopCoroutine(choseLocation);
         }
 
@@ -118,24 +138,24 @@ public static class Localization
             {
                 UI.Singleton.bottomText.text = chosenPosition is null
                     ? "Click where you think the audio source is."
-                    : $"\nHold [{StudySettings.Singleton.confirmKey}] to confirm your guess";
+                    : $"\nHold [{StudySettings.ConfirmKey}] to confirm your guess";
                 yield return new WaitForNextFrameUnit();
-                if (map.PointerToWorldPosition() is not { } location) continue;
+                if (Map.PointerToWorldPosition() is not { } location) continue;
 
                 if (Input.GetMouseButton((int)MouseButton.Left))
                 {
                     chosenPosition = location;
-                    map.mapPin.transform.position = location;
-                    map.mapPin.color = Color.black;
+                    Map.mapPin.transform.position = location;
+                    Map.mapPin.color = Color.black;
                 }
                 else if (chosenPosition is null)
                 {
-                    map.mapPin.transform.position = location;
-                    map.mapPin.color = Color.grey;
+                    Map.mapPin.transform.position = location;
+                    Map.mapPin.color = Color.grey;
                 }
                 else
                 {
-                    map.mapPin.color = Color.red;
+                    Map.mapPin.color = Color.red;
                 }
             }
         }
@@ -146,12 +166,12 @@ public static class Localization
             {
                 // wait to prevent clash with player escape logic
                 var escapedLastFrame = Input.GetKeyDown(KeyCode.Escape);
-                if (Input.GetKeyDown(StudySettings.Singleton.mapKey))
-                    map.IsFocused = !map.IsFocused;
+                if (Input.GetKeyDown(StudySettings.MapKey))
+                    Map.IsFocused = !Map.IsFocused;
                 /*------------------------------------------------*/
                 yield return new WaitForNextFrameUnit();
                 /*------------------------------------------------*/
-                if (escapedLastFrame) map.IsFocused = false;
+                if (escapedLastFrame) Map.IsFocused = false;
             }
         }
     }

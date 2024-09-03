@@ -31,32 +31,35 @@ public class References : SingletonBehaviour<References>
 
     public static float Now => Time.realtimeSinceStartup; // TODO move to utils
 
-    public static Vector3 PlayerPosition
+    public static Vector2 PlayerPosition
     {
-        get => Singleton.player.transform.position;
+        get => Singleton.player.transform.position.XZ();
         set
         {
-            Singleton.player.transform.position = value;
+            Singleton.player.transform.position = value.XZ(y: 0);
             Physics.SyncTransforms();
         }
     }
 
-    public static Vector3 AudioPosition
+    public static Vector2 AudioPosition
     {
-        get => Singleton.steamAudioSource.transform.position;
-        set => Singleton.steamAudioSource.transform.position = value;
+        get => Singleton.steamAudioSource.transform.position.XZ();
+        set => Singleton.steamAudioSource.transform.position = value.XZ(y: StudySettings.SpawnHeight);
     }
 
-    public static bool Paused
+    public static bool PlayerAndAudioPaused
     {
-        get => !Player.canMove;
         set
         {
-            if (Paused == value) return;
             Player.canMove = !value;
-            if (Paused) Singleton.audioSource.Pause();
-            else Singleton.audioSource.UnPause();
+            AudioPaused = value;
         }
+    }
+
+    public static bool AudioPaused
+    {
+        get => Singleton.audioSource.volume == 0;
+        set => Singleton.audioSource.volume = value ? 0 : 1;
     }
 
 #if UNITY_EDITOR

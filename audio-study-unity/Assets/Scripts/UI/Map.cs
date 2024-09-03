@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.UI;
 
-public class LocalizationMap : SingletonBehaviour<LocalizationMap>
+public class Map : SingletonBehaviour<Map>
 {
     [SerializeField] public SpriteRenderer mapPin;
     [SerializeField] SpriteRenderer playerPin;
     [SerializeField] RawImage map;
     [SerializeField] Camera mapCamera;
-    
     void Start()
     {
         enabled = false;
@@ -29,8 +28,8 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
             UI.Singleton.screenText.enabled = !value;
             if (value)
             {
-                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 600);
-                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 600);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, StudySettings.MapSizeFocused);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, StudySettings.MapSizeFocused);
                 map.rectTransform.pivot =
                     map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 map.rectTransform.localPosition =
@@ -38,8 +37,8 @@ public class LocalizationMap : SingletonBehaviour<LocalizationMap>
             }
             else
             {
-                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
-                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 400);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, StudySettings.MapSizeUnfocused);
+                map.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, StudySettings.MapSizeUnfocused);
                 map.rectTransform.localPosition = new Vector3(0, 0, 0);
                 map.rectTransform.pivot = map.rectTransform.anchorMin = map.rectTransform.anchorMax = new Vector2(1, 1);
             }

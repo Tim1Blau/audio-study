@@ -18,7 +18,7 @@ public class PathingRecorder : IDisposable
                 new NavigationTask.MetricsFrame
                 {
                     time = References.Now,
-                    position = References.PlayerPosition.XZ(),
+                    position = References.PlayerPosition,
                     rotation = new Vector2(rotation.y, rotation.x),
                     audioPath = res
                 }
@@ -63,7 +63,7 @@ public class PathingRecorder : IDisposable
         if (_currentAudioPath.Count == 0)
         {
             CheckError();
-            return new List<Vector2> { audioPos.XZ(), listenerPos.XZ() };
+            return new List<Vector2> { audioPos, listenerPos.XZ() };
         }
 
         _currentAudioPath.Reverse();
@@ -86,11 +86,12 @@ public class PathingRecorder : IDisposable
 
         void CheckError()
         {
-            if (Physics.RaycastAll(listenerPos, audioPos - listenerPos, Vector3.Distance(audioPos, listenerPos))
+            var audioPos3 = audioPos.XZ(y: StudySettings.SpawnHeight);
+            if (Physics.RaycastAll(listenerPos, audioPos3 - listenerPos, Vector3.Distance(audioPos3, listenerPos))
                     .Cast<RaycastHit?>()
                     .FirstOrDefault(h => h!.Value.transform.TryGetComponent<SteamAudioStaticMesh>(out _)) is { } hit)
             {
-                Debug.DrawRay(listenerPos, audioPos - listenerPos, Color.cyan, 0.5f);
+                Debug.DrawRay(listenerPos, audioPos3 - listenerPos, Color.cyan, 0.5f);
                 Debug.DrawLine(listenerPos, hit.point, Color.red, 0.5f);
                 Debug.LogWarning("No path!?");
             }
