@@ -67,7 +67,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 46
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
@@ -378,13 +378,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1f221a24d96cca428d48b7e94370a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  seed: 12345678
-  locListenerPositions: 1
-  locSourcePositionsPerListenerPos: 2
-  locListenerDistances: 10
-  locAudioDistances: 4
-  navPositions: 4
-  navAudioDistances: 7
+  scenarioSettings: {fileID: 11400000, guid: 11236284df901004183a3f2657630def, type: 2}
+  navigationSeed: 1
+  localizationSeed: 2
 --- !u!114 &2048735774617301304
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -528,7 +524,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -51.95}
+  m_AnchoredPosition: {x: 0, y: -78.5}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5071487887005314423
@@ -3919,7 +3915,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -505.23}
-  m_SizeDelta: {x: 160, y: 20}
+  m_SizeDelta: {x: 456.86, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5745216618082946873
 MonoBehaviour:
@@ -4305,7 +4301,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 800, y: 1052}
+  m_SizeDelta: {x: 850, y: 1052}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1388430744004940111
 CanvasRenderer:
@@ -4553,28 +4549,16 @@ PrefabInstance:
     m_TransformParent: {fileID: 419648526956053326}
     m_Modifications:
     - target: {fileID: 273391861344555034, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
-      propertyPath: transmissionLow
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 273391861344555034, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
-      propertyPath: transmissionMid
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 273391861344555034, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
-      propertyPath: transmissionType
+      propertyPath: transmission
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 273391861344555034, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
       propertyPath: pathingProbeBatch
       value: 
       objectReference: {fileID: 5352515755240828550}
-    - target: {fileID: 273391861344555034, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
-      propertyPath: transmissionInput
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 8115925863070666714, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.16
+      value: -3.04
       objectReference: {fileID: 0}
     - target: {fileID: 8115925863070666714, guid: 9eaedecd75030de40909d71d7c8e9c7f, type: 3}
       propertyPath: m_LocalPosition.y

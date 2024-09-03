@@ -5,9 +5,9 @@ using UnityEngine.UI;
 public class Map : SingletonBehaviour<Map>
 {
     [SerializeField] public SpriteRenderer mapPin;
-    [SerializeField] SpriteRenderer playerPin;
-    [SerializeField] RawImage map;
-    [SerializeField] Camera mapCamera;
+    [SerializeField] public SpriteRenderer playerPin;
+    [SerializeField] public RawImage map;
+    [SerializeField] public Camera mapCamera;
     void Start()
     {
         enabled = false;

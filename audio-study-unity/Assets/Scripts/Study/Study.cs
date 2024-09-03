@@ -14,9 +14,7 @@ public class Study : MonoBehaviour
 
     readonly string[] _scenes =
     {
-        "Room1",
-        "Room2",
-        "Room3"
+        "Room3", "Room1", "Room2",
     };
 
     readonly AudioConfiguration[] _audioConfigurations =
@@ -57,19 +55,33 @@ public class Study : MonoBehaviour
 
     IEnumerator DoStudy()
     {
+        References.AudioPaused = true;
+        References.Player.canMove = false;
+        /*------------------------------------------------*/
         yield return UI.WaitForPrompt("Welcome to the Study");
-
-        yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
-        data.scenarios.Clear();
-        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin.");
-
+        /*------------------------------------------------*/
+        // yield return DoTutorial();
+        /*------------------------------------------------*/
         foreach (var (scene, audioConfig) in _scenes.Zip(_audioConfigurations, (s, a) => (s, a)))
         {
+            /*------------------------------------------------*/
             yield return DoScenario(scene, audioConfig);
+            /*------------------------------------------------*/
         }
 
         Export("Final");
         UI.Singleton.screenText.text = "Completed the study!";
+    }
+
+    IEnumerator DoTutorial()
+    {
+        /*------------------------------------------------*/
+        yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
+        /*------------------------------------------------*/
+        data.scenarios.Clear();
+        /*------------------------------------------------*/
+        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin."); 
+        /*------------------------------------------------*/
     }
 
     IEnumerator DoScenario(string scene, AudioConfiguration audioConfiguration)
@@ -77,22 +89,27 @@ public class Study : MonoBehaviour
         if (SceneManager.GetActiveScene().name != scene)
         {
             SceneManager.LoadScene(scene);
+            /*------------------------------------------------*/
             yield return new WaitForNextFrameUnit();
+            /*------------------------------------------------*/
         }
+
         References.AudioPaused = true;
-        
-        var objectiveText = UI.Singleton.scenarioText.text = $"Scene: {scene}\nAudio config: {(int) audioConfiguration}";
+
+        UI.Singleton.scenarioText.text = $"{scene}\nAudio config: {(int)audioConfiguration}";
 
         var scenario = StudySettings.Singleton.GenerateScenario();
         data.scenarios.Add(scenario);
         if (scenario.navigationTasks.Count + scenario.localizationTasks.Count == 0) yield break;
 
         Setup(scenario.audioConfiguration = audioConfiguration);
-        yield return UI.WaitForPrompt(objectiveText);
-
-        // yield return Navigation.DoTasks(scenario.navigationTasks); //TODO
+        /*------------------------------------------------*/
+        yield return UI.WaitForPrompt($"{scene}\nAudio config: {(int)audioConfiguration}");
+        /*------------------------------------------------*/
+        yield return Navigation.DoTasks(scenario.navigationTasks);
         yield return Localization.DoTasks(scenario.localizationTasks);
-        Export($"{scene}-{(int) audioConfiguration}");
+        /*------------------------------------------------*/
+        Export($"{scene}-{(int)audioConfiguration}");
     }
 
     static void Setup(AudioConfiguration audioConfiguration)
@@ -106,5 +123,4 @@ public class Study : MonoBehaviour
             _                          => throw new ArgumentOutOfRangeException()
         };
     }
-
 }

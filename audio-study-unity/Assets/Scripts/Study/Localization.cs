@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -12,8 +13,8 @@ public static class Localization
         Map.enabled = false;
         References.PlayerPosition = tasks[0].listenerPosition;
         yield return UI.WaitForPrompt(
-            "Task 2/2: Localization\n"
-            + "Guess the position of the audio source without moving\n");
+            "Task 2/2: Localization"
+            + "\nGuess the position of the audio source without moving");
         References.Player.canMove = false;
         Map.enabled = true;
 
@@ -24,18 +25,14 @@ public static class Localization
             Map.IsFocused = false;
             References.PlayerPosition = task.listenerPosition;
             // BREAK //
-            UI.Singleton.screenText.text = $"{index}/{tasks.Count}";
-            UI.Singleton.bottomText.text = "";
-            References.AudioPaused = true;
-            yield return UI.WaitForSeconds(2.0f);
+            yield return UI.WaitForPrompt("Next: Reference positions"
+                                          + "\nTip: Pay close attention to the direction and volume of the sound");
             /*------------------------------------------------*/
             // REFERENCES //
             yield return ShowReferencePositions();
             /*------------------------------------------------*/
             // BREAK //
-            References.AudioPaused = true;
-            UI.Singleton.screenText.text = "Next: Localize";
-            yield return UI.WaitForSeconds(2.0f);
+            yield return UI.WaitForPrompt($"Next: Guess the position of the audio source {index}/{tasks.Count}");
             /*------------------------------------------------*/
             // LOCALIZATION //
             References.AudioPaused = false;
@@ -63,29 +60,36 @@ public static class Localization
     static IEnumerator ShowReferencePositions()
     {
         Map.enabled = true;
-        Map.IsFocused = false;
-        UI.Singleton.screenText.text = "Reference Positions..."
-                                       + "\nTip: Pay attention to direction and volume changes";
-        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.NumLocPrimingPositions,
-            StudySettings.Singleton.locAudioDistances);
+        Map.IsFocused = true;
+        Map.map.color = new Color(1, 1, 1, 0.8f);
+        References.Player.ShowMouse = false;
+        UI.Singleton.screenText.text = "Random reference positions...";
+        // var referencePositions = Enumerable.Range(0, StudySettings.LocReferencePosCount)
+        //     .Select(_ => StudySettings.Singleton.RandomPosWithMinDistance(
+        //         References.PlayerPosition,
+        //         StudySettings.Singleton.scenarioSettings.locAudioDistanceFromListener)
+        //     );
+        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.LocReferencePosCount, StudySettings.LocReferenceDistanceBetween);
         foreach (var position in referencePositions)
         {
             Map.mapPin.color = Color.green;
             References.AudioPaused = false;
             Map.mapPin.transform.position = position.XZ();
             References.AudioPosition = position;
-            yield return UI.WaitForSeconds(StudySettings.LocPrimingPositionDuration);
+            yield return UI.WaitForSeconds(StudySettings.LocReferencePosDuration);
             /*------------------------------------------------*/
             Map.mapPin.color = Color.clear;
             References.AudioPaused = true;
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(StudySettings.LocReferencePauseBetween);
             /*------------------------------------------------*/
         }
+        Map.IsFocused = false;
+        Map.map.color = Color.white;
     }
 
     static IEnumerator ShowCorrectPosition(Vector2 position)
     {
-        const float seconds = 0.9f;
+        const float seconds = 0.7f;
         const float beepDuration = 0.1f;
         Map.mapPin.transform.position = position.XZ();
         for (var i = 0; i < seconds / beepDuration; i++)

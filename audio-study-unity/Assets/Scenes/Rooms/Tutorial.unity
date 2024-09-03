@@ -195,6 +195,18 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: navigationSeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: localizationSeed
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: scenarioSettings
+      value: 
+      objectReference: {fileID: 11400000, guid: fc32c58ce3445984f9fa3dfc9b916a4c, type: 2}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: locAudioDistances
       value: 4
       objectReference: {fileID: 0}

@@ -41,7 +41,7 @@ public static class Utils
         input.Zip(input.Skip(1), (a, b) => (a, b));
 
     public static T? RandomIndex<T>(this IReadOnlyList<T> l) where T: struct =>
-        l.Count == 0 ? default : l[Random.Range(0, l.Count - 1)];
+        l.Count == 0 ? null : l[Random.Range(0, l.Count - 1)];
 }
 
 

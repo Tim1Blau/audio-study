@@ -12,6 +12,7 @@ public static class Navigation
         yield return UI.WaitForPrompt(
             "Task 1/2: Navigation\n" +
             "Find the audio source as quickly as possible");
+        References.Player.canMove = true;
 
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();
         var index = 0;
@@ -25,7 +26,7 @@ public static class Navigation
             UI.Singleton.bottomText.text = "";
             /*------------------------------------------------*/
             References.PlayerAndAudioPaused = true;
-            yield return UI.WaitForSeconds(2.0f);
+            yield return UI.WaitForSeconds(StudySettings.NavPauseBetween);
             References.PlayerAndAudioPaused = false;
             /*------------------------------------------------*/
             UI.Singleton.screenText.text = "";

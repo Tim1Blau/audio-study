@@ -168,7 +168,7 @@ MonoBehaviour:
   transmission: 0
   transmissionType: 1
   transmissionInput: 1
-  transmissionLow: 0.55
+  transmissionLow: 0.5
   transmissionMid: 0
   transmissionHigh: 0
   maxTransmissionSurfaces: 1

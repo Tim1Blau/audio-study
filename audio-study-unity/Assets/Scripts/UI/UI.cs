@@ -44,11 +44,15 @@ public class UI : SingletonBehaviour<UI>
 
     public static IEnumerator WaitForPrompt(string message)
     {
-        References.PlayerAndAudioPaused = true;
+        var audioPaused = References.AudioPaused;
+        var canMove = References.Player.canMove;
+        References.AudioPaused = true;
+        References.Player.canMove = false;
         /*------------------------------------------------*/
         yield return UI.Singleton.Prompt(message);
         /*------------------------------------------------*/
-        References.PlayerAndAudioPaused = false;
+        References.AudioPaused = audioPaused;
+        References.Player.canMove = canMove;
     }
 
     IEnumerator Prompt(string message)
