@@ -18,16 +18,16 @@ public class StudySettings : SingletonBehaviour<StudySettings>
     public int navPositions = 1;
     public float navAudioDistances = 7;
 
-    [Header("Utility Parameters")]
-    public const float FoundSourceDistance = 1.0f;
-    public const float SpawnHeight = 1.5f;
+    // Utility Parameters
     public const KeyCode MapKey = KeyCode.E;
     public const KeyCode ConfirmKey = KeyCode.Space;
     public const float PressToConfirmDuration = 0.5f;
-    public const int NumLocPrimingPositions = 10;
-    public const float LocPrimingPositionDuration = 2.0f;
     public const int MapSizeFocused = 700;
     public const int MapSizeUnfocused = 600;
+    public const float AudioYPosition = 1.5f;
+    public const float FoundSourceDistance = 1.0f;
+    public const int NumLocPrimingPositions = 10;
+    public const float LocPrimingPositionDuration = 2.0f;
 
     Vector2[] _probePositions;
 
@@ -71,7 +71,7 @@ public class StudySettings : SingletonBehaviour<StudySettings>
                     ).ToList()
         };
     }
-    
+
     public IEnumerable<Vector2> RandomAudioPositions(int count, float minDistance)
     {
         var start = new Vector2(-100, -100);
@@ -82,7 +82,7 @@ public class StudySettings : SingletonBehaviour<StudySettings>
     public Vector2 RandomPosWithMinDistance(Vector2 from, float minDistance)
     {
         var position = _probePositions.Where(v => Vector2.Distance(from, v) > minDistance).ToArray().RandomIndex();
-        if (position is {} p) return p;
+        if (position is { } p) return p;
         Debug.LogWarning(
             $"No available probePositions further than the min distance {minDistance}m away from the listener");
         return _probePositions.RandomIndex() ?? throw new Exception("No probePositions");

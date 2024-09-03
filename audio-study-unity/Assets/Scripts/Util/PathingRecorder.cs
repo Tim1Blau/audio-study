@@ -86,7 +86,7 @@ public class PathingRecorder : IDisposable
 
         void CheckError()
         {
-            var audioPos3 = audioPos.XZ(y: StudySettings.SpawnHeight);
+            var audioPos3 = audioPos.XZ(y: StudySettings.AudioYPosition);
             if (Physics.RaycastAll(listenerPos, audioPos3 - listenerPos, Vector3.Distance(audioPos3, listenerPos))
                     .Cast<RaycastHit?>()
                     .FirstOrDefault(h => h!.Value.transform.TryGetComponent<SteamAudioStaticMesh>(out _)) is { } hit)

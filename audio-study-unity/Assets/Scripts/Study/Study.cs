@@ -1,13 +1,9 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using SteamAudio;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;
 
 /// Persistent Singleton spawned by StudySettings.Start() 
 public class Study : MonoBehaviour
@@ -94,7 +90,7 @@ public class Study : MonoBehaviour
         Setup(scenario.audioConfiguration = audioConfiguration);
         yield return UI.WaitForPrompt(objectiveText);
 
-        yield return Navigation.DoTasks(scenario.navigationTasks);
+        // yield return Navigation.DoTasks(scenario.navigationTasks); //TODO
         yield return Localization.DoTasks(scenario.localizationTasks);
         Export($"{scene}-{(int) audioConfiguration}");
     }

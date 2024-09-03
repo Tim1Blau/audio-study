@@ -44,7 +44,7 @@ public class References : SingletonBehaviour<References>
     public static Vector2 AudioPosition
     {
         get => Singleton.steamAudioSource.transform.position.XZ();
-        set => Singleton.steamAudioSource.transform.position = value.XZ(y: StudySettings.SpawnHeight);
+        set => Singleton.steamAudioSource.transform.position = value.XZ(y: StudySettings.AudioYPosition);
     }
 
     public static bool PlayerAndAudioPaused
