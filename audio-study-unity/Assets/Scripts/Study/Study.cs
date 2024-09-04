@@ -14,7 +14,7 @@ public class Study : MonoBehaviour
 
     readonly string[] _scenes =
     {
-        "Room3", "Room1", "Room2",
+        "Room2", "Room3", "Room1",
     };
 
     readonly AudioConfiguration[] _audioConfigurations =
@@ -42,9 +42,9 @@ public class Study : MonoBehaviour
             Export("Backup");
 
 #if UNITY_EDITOR
-        if(Input.GetKeyDown(KeyCode.Keypad0)) AudioConfig = AudioConfiguration.Basic;
-        if(Input.GetKeyDown(KeyCode.Keypad1)) AudioConfig = AudioConfiguration.Pathing;
-        if(Input.GetKeyDown(KeyCode.Keypad2)) AudioConfig = AudioConfiguration.Mixed;
+        if (Input.GetKeyDown(KeyCode.Keypad0)) AudioConfig = AudioConfiguration.Basic;
+        if (Input.GetKeyDown(KeyCode.Keypad1)) AudioConfig = AudioConfiguration.Pathing;
+        if (Input.GetKeyDown(KeyCode.Keypad2)) AudioConfig = AudioConfiguration.Mixed;
 #endif
     }
 
@@ -86,7 +86,7 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
         data.scenarios.Clear();
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin."); 
+        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin.");
         /*------------------------------------------------*/
     }
 
@@ -117,7 +117,7 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
         Export($"{scene}-{(int)audioConfiguration}");
     }
-    
+
     public static AudioConfiguration AudioConfig
     {
         get
@@ -128,18 +128,18 @@ public class Study : MonoBehaviour
                 (true, 0)  => AudioConfiguration.Basic,
                 (false, 1) => AudioConfiguration.Pathing,
                 (true, 1)  => AudioConfiguration.Mixed,
-                _ => AudioConfiguration.Basic,
+                _          => AudioConfiguration.Basic,
             };
         }
         set
         {
             if (value == AudioConfig) return;
             var audio = References.Singleton.steamAudioSource;
-            (audio.transmission, audio.pathingMixLevel) = value switch
+            (audio.transmission, audio.transmissionLow, audio.pathingMixLevel) = value switch
             {
-                AudioConfiguration.Basic   => (transmission: true, pathing: 0),
-                AudioConfiguration.Pathing => (transmission: false, pathing: 1),
-                AudioConfiguration.Mixed   => (transmission: true, pathing: 1),
+                AudioConfiguration.Basic   => (transmission: true, transmissionLow: 1, pathing: 0),
+                AudioConfiguration.Pathing => (transmission: false, transmissionLow: 0, pathing: 1),
+                AudioConfiguration.Mixed   => (transmission: true, transmissionLow: 0.4f, pathing: 1),
                 _                          => throw new ArgumentOutOfRangeException()
             };
         }
