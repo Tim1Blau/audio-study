@@ -182,10 +182,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Study
       objectReference: {fileID: 0}
-    - target: {fileID: 3668457875475837104, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+    - target: {fileID: 3362628681025878830, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
       objectReference: {fileID: 11400000, guid: 38fb76ebc6342a1428ea8bcc5541ccd5, type: 2}
+    - target: {fileID: 3668457875475837104, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: asset
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3981357991288019251, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -6198,6 +6202,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.96
       objectReference: {fileID: 0}
+    - target: {fileID: 6105823096639859286, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
     - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -6206,6 +6214,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8448582858508369919, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2628482395200241503, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
     - target: {fileID: 8588190076204190805, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -6214,6 +6226,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9161598046451630083, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2628482395200241503, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

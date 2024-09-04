@@ -194,6 +194,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Study
       objectReference: {fileID: 0}
+    - target: {fileID: 3362628681025878830, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: asset
+      value: 
+      objectReference: {fileID: 11400000, guid: 4fc6a93dc7d278c419c3f728a5120b24, type: 2}
     - target: {fileID: 3668457875475837104, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
@@ -205,7 +209,7 @@ PrefabInstance:
     - target: {fileID: 5352515755240828550, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
-      objectReference: {fileID: 11400000, guid: ae4b57cc9daf04b4e92f8e28de3f4383, type: 2}
+      objectReference: {fileID: 11400000, guid: 96d8d2b3b9c39f241af158a742517308, type: 2}
     - target: {fileID: 5352515755240828550, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: probeDataSize
       value: 9824
@@ -7126,6 +7130,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8448582858508369919, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 2693012856814855960, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
     - target: {fileID: 8588190076204190805, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -7134,6 +7142,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9161598046451630083, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 2693012856814855960, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
