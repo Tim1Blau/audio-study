@@ -8,12 +8,34 @@ public class Map : SingletonBehaviour<Map>
     [SerializeField] public SpriteRenderer playerPin;
     [SerializeField] public RawImage map;
     [SerializeField] public Camera mapCamera;
+    
     void Start()
     {
         enabled = false;
         mapPin.color = Color.clear;
     }
+    
+    void Update()
+    {
+        if (map.enabled) RenderMap();
+    }
 
+    void OnEnable()
+    {
+        var mapTransform = map.GetComponent<RectTransform>().rect;
+        map.texture = new RenderTexture((int)mapTransform.width, (int)mapTransform.height,
+            GraphicsFormat.R8G8B8A8_UNorm, GraphicsFormat.D32_SFloat_S8_UInt);
+        mapPin.enabled = map.enabled = mapCamera.enabled = true;
+    }
+
+    void OnDisable()
+    {
+        Destroy(map.texture);
+        map.texture = null;
+        mapPin.enabled = map.enabled = mapCamera.enabled = false;
+        IsFocused = false;
+    }
+    
     bool _isFocused = true;
 
     public bool IsFocused
@@ -45,22 +67,6 @@ public class Map : SingletonBehaviour<Map>
         }
     }
 
-    void OnEnable()
-    {
-        var mapTransform = map.GetComponent<RectTransform>().rect;
-        map.texture = new RenderTexture((int)mapTransform.width, (int)mapTransform.height,
-            GraphicsFormat.R8G8B8A8_UNorm, GraphicsFormat.D32_SFloat_S8_UInt);
-        mapPin.enabled = map.enabled = mapCamera.enabled = true;
-    }
-
-    void OnDisable()
-    {
-        Destroy(map.texture);
-        map.texture = null;
-        mapPin.enabled = map.enabled = mapCamera.enabled = false;
-        IsFocused = false;
-    }
-
     public Vector3? PointerToWorldPosition()
     {
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -87,16 +93,6 @@ public class Map : SingletonBehaviour<Map>
         }
     }
 
-    #region Rendering
-
-    void Update()
-    {
-        if (map.enabled) RenderMap();
-        playerPin.transform.position = References.Player.transform.position.WithY(0);
-        playerPin.transform.rotation =
-            Quaternion.Euler(90, References.Player.camera.transform.rotation.eulerAngles.y, 0);
-    }
-
     void RenderMap()
     {
         mapCamera.targetTexture = map.texture as RenderTexture;
@@ -110,6 +106,4 @@ public class Map : SingletonBehaviour<Map>
         mapCamera.clearFlags = clear;
         mapCamera.targetTexture = null;
     }
-
-    #endregion
 }

@@ -40,6 +40,12 @@ public class Study : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
             Export("Backup");
+
+#if UNITY_EDITOR
+        if(Input.GetKeyDown(KeyCode.Keypad0)) AudioConfig = AudioConfiguration.Basic;
+        if(Input.GetKeyDown(KeyCode.Keypad1)) AudioConfig = AudioConfiguration.Pathing;
+        if(Input.GetKeyDown(KeyCode.Keypad2)) AudioConfig = AudioConfiguration.Mixed;
+#endif
     }
 
     void Export(string stage) => JsonData.Export(data, _exportPath + " " + stage);
@@ -102,7 +108,7 @@ public class Study : MonoBehaviour
         data.scenarios.Add(scenario);
         if (scenario.navigationTasks.Count + scenario.localizationTasks.Count == 0) yield break;
 
-        Setup(scenario.audioConfiguration = audioConfiguration);
+        AudioConfig = scenario.audioConfiguration = audioConfiguration;
         /*------------------------------------------------*/
         yield return UI.WaitForPrompt($"{scene}\nAudio config: {(int)audioConfiguration}");
         /*------------------------------------------------*/
@@ -111,16 +117,31 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
         Export($"{scene}-{(int)audioConfiguration}");
     }
-
-    static void Setup(AudioConfiguration audioConfiguration)
+    
+    public static AudioConfiguration AudioConfig
     {
-        var audio = References.Singleton.steamAudioSource;
-        (audio.transmission, audio.pathingMixLevel) = audioConfiguration switch
+        get
         {
-            AudioConfiguration.Basic   => (transmission: true, pathing: 0),
-            AudioConfiguration.Pathing => (transmission: false, pathing: 1),
-            AudioConfiguration.Mixed   => (transmission: true, pathing: 1),
-            _                          => throw new ArgumentOutOfRangeException()
-        };
+            var audio = References.Singleton.steamAudioSource;
+            return (audio.transmission, audio.pathingMixLevel) switch
+            {
+                (true, 0)  => AudioConfiguration.Basic,
+                (false, 1) => AudioConfiguration.Pathing,
+                (true, 1)  => AudioConfiguration.Mixed,
+                _ => AudioConfiguration.Basic,
+            };
+        }
+        set
+        {
+            if (value == AudioConfig) return;
+            var audio = References.Singleton.steamAudioSource;
+            (audio.transmission, audio.pathingMixLevel) = value switch
+            {
+                AudioConfiguration.Basic   => (transmission: true, pathing: 0),
+                AudioConfiguration.Pathing => (transmission: false, pathing: 1),
+                AudioConfiguration.Mixed   => (transmission: true, pathing: 1),
+                _                          => throw new ArgumentOutOfRangeException()
+            };
+        }
     }
 }

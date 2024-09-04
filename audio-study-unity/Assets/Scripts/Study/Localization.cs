@@ -64,18 +64,13 @@ public static class Localization
         Map.map.color = new Color(1, 1, 1, 0.8f);
         References.Player.ShowMouse = false;
         UI.Singleton.screenText.text = "Random reference positions...";
-        // var referencePositions = Enumerable.Range(0, StudySettings.LocReferencePosCount)
-        //     .Select(_ => StudySettings.Singleton.RandomPosWithMinDistance(
-        //         References.PlayerPosition,
-        //         StudySettings.Singleton.scenarioSettings.locAudioDistanceFromListener)
-        //     );
         var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.LocReferencePosCount, StudySettings.LocReferenceDistanceBetween);
         foreach (var position in referencePositions)
         {
             Map.mapPin.color = Color.green;
-            References.AudioPaused = false;
             Map.mapPin.transform.position = position.XZ();
             References.AudioPosition = position;
+            References.AudioPaused = false;
             yield return UI.WaitForSeconds(StudySettings.LocReferencePosDuration);
             /*------------------------------------------------*/
             Map.mapPin.color = Color.clear;

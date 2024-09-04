@@ -45,7 +45,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: df160f2b97dd94d5bbd28a63d257177f, type: 3}
+  m_audioClip: {fileID: 8300000, guid: c333674f441f603478fb83bd30b0eccc, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -162,7 +162,7 @@ MonoBehaviour:
   occlusion: 1
   occlusionInput: 0
   occlusionType: 1
-  occlusionRadius: 1
+  occlusionRadius: 2
   occlusionSamples: 16
   occlusionValue: 1
   transmission: 0

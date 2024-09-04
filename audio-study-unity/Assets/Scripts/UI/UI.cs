@@ -11,7 +11,7 @@ public class UI : SingletonBehaviour<UI>
     [SerializeField] public Text scenarioText;
     [SerializeField] Slider breakProgress;
     [SerializeField] Slider confirmProgress;
-    
+
     new void Awake()
     {
         base.Awake();
@@ -22,6 +22,14 @@ public class UI : SingletonBehaviour<UI>
     {
         breakProgress.gameObject.SetActive(false);
         confirmProgress.gameObject.SetActive(false);
+    }
+
+    void Update()
+    {
+        Map.Singleton.playerPin.transform.SetPositionAndRotation(
+            References.Player.transform.position.WithY(0),
+            Quaternion.Euler(90, References.Player.camera.transform.rotation.eulerAngles.y, 0)
+        );
     }
 
     public static IEnumerator WaitForSeconds(float seconds)
@@ -36,6 +44,7 @@ public class UI : SingletonBehaviour<UI>
             slider.value = (References.Now - start) / seconds;
             yield return new WaitForNextFrameUnit();
         }
+
         slider.value = 1;
         yield return new WaitForNextFrameUnit();
 
@@ -79,11 +88,12 @@ public class UI : SingletonBehaviour<UI>
                 yield return new WaitForNextFrameUnit();
                 progress.value = (References.Now - pressStart) / StudySettings.PressToConfirmDuration;
             }
-            
+
             progress.gameObject.SetActive(false);
             if (Input.GetKey(keyCode))
                 break;
         }
+
         onFinished?.Invoke();
     }
 }

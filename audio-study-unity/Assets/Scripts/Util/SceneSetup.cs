@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using SteamAudio;
 using UnityEditor;
 #if UNITY_EDITOR
@@ -67,7 +68,11 @@ public class SceneSetupEditor : Editor
                 Debug.DrawLine(task.listenerStartPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
             }
         }
+
+        Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
     }
+
+    AudioConfiguration _selected = AudioConfiguration.Basic;
 
     void SetMesh()
     {
