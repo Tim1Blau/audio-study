@@ -711,7 +711,7 @@ namespace SteamAudio
             {
                 for (var i = 0; i < sSingleton.mHRTFs.Length; ++i)
                 {
-                    sSingleton.mHRTFs[i].Release();
+                    sSingleton.mHRTFs[i]?.Release(); // MODIFIED Code
                     sSingleton.mHRTFs[i] = null;
                 }
             }

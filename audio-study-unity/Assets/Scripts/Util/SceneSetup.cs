@@ -72,8 +72,6 @@ public class SceneSetupEditor : Editor
         Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
     }
 
-    AudioConfiguration _selected = AudioConfiguration.Basic;
-
     void SetMesh()
     {
         if (Config.mesh is not { } mesh)
