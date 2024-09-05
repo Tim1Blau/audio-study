@@ -58,7 +58,7 @@ public class UI : SingletonBehaviour<UI>
         References.AudioPaused = true;
         References.Player.canMove = false;
         /*------------------------------------------------*/
-        yield return UI.Singleton.Prompt(message);
+        yield return Singleton.Prompt(message);
         /*------------------------------------------------*/
         References.AudioPaused = audioPaused;
         References.Player.canMove = canMove;
@@ -67,7 +67,9 @@ public class UI : SingletonBehaviour<UI>
     IEnumerator Prompt(string message)
     {
         screenText.text = message;
-        bottomText.text = $"[Hold {StudySettings.ConfirmKey} to continue]";
+        bottomText.text = new LocalText(
+            $"[Hold {StudySettings.ConfirmKey} to continue]",
+            $"[Halten Sie {StudySettings.ConfirmKey} um fortzufahren]");
         yield return WaitForKeyHold(StudySettings.ConfirmKey);
         bottomText.text = screenText.text = "";
     }

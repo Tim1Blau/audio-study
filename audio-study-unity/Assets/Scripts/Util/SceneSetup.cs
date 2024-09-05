@@ -25,51 +25,57 @@ public class SceneSetupEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        if (GUILayout.Button("Setup Scene"))
-        {
-            try
-            {
-                Log("START");
-                SetMesh();
-                ExportScene();
-                GenerateProbes();
-                serializedObject.ApplyModifiedProperties();
-                Log("FINISHED");
-            }
-            catch (Exception e)
-            {
-                Log("FAIL");
-                Debug.LogException(e);
-            }
-        }
-
-        if (GUILayout.Button("Visualize Localization"))
-        {
-            var studySettings = FindObjectOfType<StudySettings>();
-            var tasks = studySettings.GenerateLocalizationTasks();
-            int index = 0;
-            foreach (var task in tasks)
-            {
-                var c = (float)++index / tasks.Count;
-                var color = new Color(c, c, c);
-                Debug.DrawLine(task.listenerPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
-            }
-        }
-
-        if (GUILayout.Button("Visualize Navigation"))
-        {
-            var studySettings = FindObjectOfType<StudySettings>();
-            var tasks = studySettings.GenerateNavigationTasks();
-            int index = 0;
-            foreach (var task in tasks)
-            {
-                var c = (float)++index / tasks.Count;
-                var color = new Color(c, c, c);
-                Debug.DrawLine(task.listenerStartPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
-            }
-        }
+        if (GUILayout.Button("Setup Scene")) SetupScene();
+        if (GUILayout.Button("Visualize Localization")) VisualizeLocalization();
+        if (GUILayout.Button("Visualize Navigation")) VisualizeNavigation();
 
         Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
+    }
+
+    static void VisualizeNavigation()
+    {
+        var studySettings = FindObjectOfType<StudySettings>();
+        var tasks = studySettings.GenerateNavigationTasks();
+        int index = 0;
+        foreach (var task in tasks)
+        {
+            var c = (float)++index / tasks.Count;
+            var color = new Color(c, c, c);
+            Debug.DrawLine(task.listenerStartPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
+        }
+        Debug.Log("Visualized Navigation");
+    }
+
+    static void VisualizeLocalization()
+    {
+        var studySettings = FindObjectOfType<StudySettings>();
+        var tasks = studySettings.GenerateLocalizationTasks();
+        int index = 0;
+        foreach (var task in tasks)
+        {
+            var c = (float)++index / tasks.Count;
+            var color = new Color(c, c, c);
+            Debug.DrawLine(task.listenerPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
+        }
+        Debug.Log("Visualized Localization");
+    }
+
+    void SetupScene()
+    {
+        try
+        {
+            Log("START");
+            SetMesh();
+            ExportScene();
+            GenerateProbes();
+            serializedObject.ApplyModifiedProperties();
+            Log("FINISHED");
+        }
+        catch (Exception e)
+        {
+            Log("FAIL");
+            Debug.LogException(e);
+        }
     }
 
     void SetMesh()

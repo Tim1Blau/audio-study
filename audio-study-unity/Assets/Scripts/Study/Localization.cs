@@ -13,8 +13,12 @@ public static class Localization
         Map.enabled = false;
         References.PlayerPosition = tasks[0].listenerPosition;
         yield return UI.WaitForPrompt(
-            "Task 2/2: Localization"
-            + "\nGuess the position of the audio source without moving");
+            new LocalText(
+                "Localization:"
+                + "\nGuess the position of the audio source without moving",
+                "Lokalisierung:"
+                + "\nErraten Sie die Position der Audioquelle, ohne sich zu bewegen"
+            ));
         References.Player.canMove = false;
         Map.enabled = true;
 
@@ -25,20 +29,31 @@ public static class Localization
             Map.IsFocused = false;
             References.PlayerPosition = task.listenerPosition;
             // BREAK //
-            yield return UI.WaitForPrompt("Next: Reference positions"
-                                          + "\nTip: Pay close attention to the direction and volume of the sound");
+            yield return UI.WaitForPrompt(new LocalText(
+                "Next: Example audio positions"
+                + "\nUse these as reference to determine the position of the audio source"
+                + "\nTip: Pay close attention to the direction and volume of the sound",
+                "Es folgt: Beispielaudiopositonen"
+                + "\nNutzen Sie diese als Referenz um die Position der Audioquelle bestimmen zu können"
+                + "\nTipp: Achten Sie auf die Richtung und Lautstärke des Tons"
+            ));
             /*------------------------------------------------*/
             // REFERENCES //
             yield return ShowReferencePositions();
             /*------------------------------------------------*/
             // BREAK //
-            yield return UI.WaitForPrompt($"Next: Guess the position of the audio source {index}/{tasks.Count}");
+            yield return UI.WaitForPrompt(new LocalText(
+                $"Next: Guess the position of the audio source {index}/{tasks.Count}",
+                $"Es folgt: Erraten Sie die Position der Audioquelle {index}/{tasks.Count}"
+            ));
             /*------------------------------------------------*/
             // LOCALIZATION //
             References.AudioPaused = false;
             References.AudioPosition = task.audioPosition;
             Map.IsFocused = false;
-            UI.Singleton.screenText.text = $"Localize the audio source on the map";
+            UI.Singleton.screenText.text = new LocalText(
+                "Localize the audio source on the map",
+                "Lokalisieren Sie die Audioquelle auf der Karte");
             task.startTime = References.Now;
             /*------------------------------------------------*/
             yield return WaitForSoundLocalized(res => task.guessedPosition = res.XZ());
@@ -63,8 +78,12 @@ public static class Localization
         Map.IsFocused = true;
         Map.map.color = new Color(1, 1, 1, 0.8f);
         References.Player.ShowMouse = false;
-        UI.Singleton.screenText.text = "Random reference positions...";
-        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.LocReferencePosCount, StudySettings.LocReferenceDistanceBetween);
+        UI.Singleton.screenText.text = new LocalText(
+            "Example audio positions...",
+            "Beispielaudiopositonen..."
+        );
+        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.LocReferencePosCount,
+            StudySettings.LocReferenceDistanceBetween);
         foreach (var position in referencePositions)
         {
             Map.mapPin.color = Color.green;
@@ -78,6 +97,7 @@ public static class Localization
             yield return new WaitForSeconds(StudySettings.LocReferencePauseBetween);
             /*------------------------------------------------*/
         }
+
         Map.IsFocused = false;
         Map.map.color = Color.white;
     }
@@ -106,7 +126,9 @@ public static class Localization
         while (!confirmed)
         {
             if (chosenPosition is null) Map.mapPin.color = Color.clear;
-            UI.Singleton.bottomText.text = $"\nPress [{StudySettings.MapKey}] to open the map";
+            UI.Singleton.bottomText.text = new LocalText(
+                $"Press [{StudySettings.MapKey}] to open the map",
+                $"Drücken Sie [{StudySettings.MapKey}] um die Karte zu öffnen");
             /*------------------------------------------------*/
             yield return new WaitUntil(() => Map.IsFocused);
             /*------------------------------------------------*/
@@ -136,8 +158,12 @@ public static class Localization
             while (Application.isPlaying)
             {
                 UI.Singleton.bottomText.text = chosenPosition is null
-                    ? "Click where you think the audio source is."
-                    : $"\nHold [{StudySettings.ConfirmKey}] to confirm your guess";
+                    ? new LocalText(
+                        "Click where you think the audio source is.",
+                        "Klicken Sie auf die Stelle an der sie denken, dass sich die Audioquelle befindet.")
+                    : new LocalText(
+                        $"Hold [{StudySettings.ConfirmKey}] to confirm your guess",
+                        $"Halten Sie [{StudySettings.ConfirmKey}] um die Position zu bestätigen");
                 yield return new WaitForNextFrameUnit();
                 if (Map.PointerToWorldPosition() is not { } location) continue;
 

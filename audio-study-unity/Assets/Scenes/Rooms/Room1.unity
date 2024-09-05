@@ -6240,11 +6240,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.74
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.96
+      value: 3.01
       objectReference: {fileID: 0}
     - target: {fileID: 6105823096639859286, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

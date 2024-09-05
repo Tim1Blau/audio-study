@@ -14,7 +14,7 @@ public class Study : MonoBehaviour
 
     readonly string[] _scenes =
     {
-        "Room2", "Room3", "Room1",
+        "Room3", "Room2", "Room1",
     };
 
     readonly AudioConfiguration[] _audioConfigurations =
@@ -56,6 +56,7 @@ public class Study : MonoBehaviour
         _exportPath = "StudyData"
                       + (Application.isEditor ? "_Editor" : "")
                       + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
+
         return DoStudy();
     }
 
@@ -64,7 +65,7 @@ public class Study : MonoBehaviour
         References.AudioPaused = true;
         References.Player.canMove = false;
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt("Welcome to the Study");
+        yield return UI.WaitForPrompt(new LocalText("Welcome to the Study", "Willkommen zur Studie"));
         /*------------------------------------------------*/
         // yield return DoTutorial();
         /*------------------------------------------------*/
@@ -76,7 +77,7 @@ public class Study : MonoBehaviour
         }
 
         Export("Final");
-        UI.Singleton.screenText.text = "Completed the study!";
+        UI.Singleton.screenText.text = new LocalText("Completed the study!", "Studie abgeschlossen!");
     }
 
     IEnumerator DoTutorial()
@@ -86,7 +87,9 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
         data.scenarios.Clear();
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt("Completed the tutorial!\nNow the study can begin.");
+        yield return UI.WaitForPrompt(new LocalText(
+            "Completed the tutorial!\nNow the study can begin.",
+            "Tutorial abgeschlossen!\nJetzt kann die Studie beginnen."));
         /*------------------------------------------------*/
     }
 

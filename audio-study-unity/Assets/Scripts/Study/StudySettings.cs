@@ -25,8 +25,8 @@ public class StudySettings : SingletonBehaviour<StudySettings>
     
     // Localization Reference Positions
     public const int LocReferencePosCount = 7;
-    public const float LocReferencePosDuration = 1.5f;
-    public const float LocReferencePauseBetween = 0.1f;
+    public const float LocReferencePosDuration = 1.6f;
+    public const float LocReferencePauseBetween = 0.15f;
     public const float LocReferenceDistanceBetween = 10.0f;
     
     // Other

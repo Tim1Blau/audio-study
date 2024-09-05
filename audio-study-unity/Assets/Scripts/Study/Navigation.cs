@@ -9,9 +9,12 @@ public static class Navigation
     {
         if (tasks.Count == 0) yield break;
         References.PlayerPosition = tasks[0].listenerStartPosition;
-        yield return UI.WaitForPrompt(
-            "Task 1/2: Navigation\n" +
-            "Find the audio source as quickly as possible");
+        yield return UI.WaitForPrompt(new LocalText(
+            "Navigation:" +
+            "\nFind the audio source as quickly as possible",
+            "Navigation:" +
+            "\nFinden Sie die Audioquelle so schnell wie möglich"
+        ));
         References.Player.canMove = true;
 
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();
@@ -30,7 +33,9 @@ public static class Navigation
             References.PlayerAndAudioPaused = false;
             /*------------------------------------------------*/
             UI.Singleton.screenText.text = "";
-            UI.Singleton.bottomText.text = $"Find audio source {index}/{tasks.Count}";
+            UI.Singleton.bottomText.text = new LocalText(
+                $"Find audio source {index}/{tasks.Count}", 
+                $"Finden Sie Audioquelle {index}/{tasks.Count}");
 
             task.startTime = References.Now;
             var recording = coroutineHolder.StartCoroutine(RecordNavFramesLoop(onNewFrame: task.frames.Add));

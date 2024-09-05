@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9ffe62fd582445698136984f9fe4146, type: 3}
   m_Name: TutorialScenario
   m_EditorClassIdentifier: Assembly-CSharp::ScenarioSettings
-  locListenerPositions: 1
   locListenerDistances: 10
-  locAudioPositionsPerListenerPos: 2
+  locListenerPositions: 1
+  locAudioPositionsPerListenerPos: 1
   locAudioDistanceFromListener: 4
   navPositions: 3
   navAudioDistances: 9
