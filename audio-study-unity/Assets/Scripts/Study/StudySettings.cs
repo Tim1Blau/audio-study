@@ -16,6 +16,7 @@ public class StudySettings : SingletonBehaviour<StudySettings>
     public const KeyCode MapKey = KeyCode.E;
     public const KeyCode ConfirmKey = KeyCode.Space;
     public const float PressToConfirmDuration = 0.5f;
+    public const float PressToSelectSceneOrderDuration = 2.0f;
     public const int MapSizeFocused = 700;
     public const int MapSizeUnfocused = 600;
     

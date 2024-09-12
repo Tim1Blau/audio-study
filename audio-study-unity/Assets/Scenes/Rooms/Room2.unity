@@ -210,6 +210,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 2693012856814855960, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
+    - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: localizationSeed
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5352515755240828550, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
@@ -7356,11 +7360,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.74
+      value: 10.56
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 28.06
+      value: 5.35
       objectReference: {fileID: 0}
     - target: {fileID: 5613011837440701047, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x

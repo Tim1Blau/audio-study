@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: DefaultScenario
   m_EditorClassIdentifier: Assembly-CSharp::ScenarioSettings
   navPositions: 10
-  navAudioDistances: 15
+  navAudioDistances: 10
   locListenerDistances: 15
   locListenerPositions: 1
-  locAudioPositionsPerListenerPos: 6
+  locAudioPositionsPerListenerPos: 7
   locAudioDistanceFromListener: 4

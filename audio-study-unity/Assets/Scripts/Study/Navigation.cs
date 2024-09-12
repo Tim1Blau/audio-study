@@ -62,7 +62,7 @@ public static class Navigation
             yield return PathingRecorder.WaitForNextNavFrame(res => frame = res);
             /*------------------------------------------------*/
 
-            if (frame.audioPath.Count < 2)
+            if (frame.audioPath.points.Count < 2)
             {
                 Debug.LogError("audioPath has less then two elements");
                 continue;
@@ -73,7 +73,7 @@ public static class Navigation
 #if UNITY_EDITOR
             var efficiency = Utils.Efficiency(
                 moveDir: References.PlayerPosition - prevListenerPosition,
-                optimalDir: frame.audioPath[^2] - frame.audioPath[^1]
+                optimalDir: frame.audioPath.points[^2] - frame.audioPath.points[^1]
             );
 
             // UI.Singleton.bottomText.text = $"Efficiency: {efficiency:P}";

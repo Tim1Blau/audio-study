@@ -14,7 +14,26 @@ public enum AudioConfiguration
 [Serializable]
 public record StudyData
 {
+    public QuestionData answers = new();
     public List<Scenario> scenarios = new();
+}
+
+[Serializable]
+public record QuestionData
+{
+    public enum Frequency
+    {
+        Undefined = 0,
+        Never = 1,
+        Rarely = 2,
+        Occasionally = 3,
+        Often = 4
+    }
+
+    public int age;
+    public Frequency gamingExperience;
+    public Frequency firstPersonExperience;
+    public Frequency headphoneUsage;
 }
 
 [Serializable]
@@ -35,7 +54,7 @@ public record LocalizationTask
     public float startTime = -1;
     public float endTime = -1;
     public Vector2 guessedPosition = Vector2.zero;
-    public List<Vector2> audioPath = new();
+    public AudioPath audioPath = new();
 }
 
 [Serializable]
@@ -54,9 +73,17 @@ public record NavigationTask
         public float time;
         public Vector2 position;
         public Vector2 rotation;
-        public List<Vector2> audioPath = new();
+        public AudioPath audioPath = new();
     }
 }
+
+[Serializable]
+public record AudioPath
+{
+    public bool isOccluded; // if true, the path may be invalid
+    public List<Vector2> points = new();
+}
+
 
 public static class JsonData
 {
@@ -64,7 +91,7 @@ public static class JsonData
 
     public static void Export(StudyData data, string path = DefaultPath)
     {
-        var json = JsonUtility.ToJson(data, prettyPrint: Application.isEditor);
+        var json = JsonUtility.ToJson(data, prettyPrint: true);
         path += ".json";
         File.WriteAllText(path, json);
         Debug.Log($"Exported Data to {path}");

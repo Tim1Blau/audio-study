@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -97,5 +98,31 @@ public class UI : SingletonBehaviour<UI>
         }
 
         onFinished?.Invoke();
+    }
+
+    public static IEnumerator WaitForKeySelect(Action<KeyCode> onFinished, params KeyCode[] keyCodes)
+    {
+        var progress = UI.Singleton.confirmProgress;
+
+        while (Application.isPlaying)
+        {
+            yield return new WaitUntil(() => !KeyPressed());
+            yield return new WaitUntil(KeyPressed);
+            progress.gameObject.SetActive(true);
+            var pressStart = References.Now;
+            while (KeyPressed() && References.Now - pressStart < StudySettings.PressToSelectSceneOrderDuration)
+            {
+                yield return new WaitForNextFrameUnit();
+                progress.value = (References.Now - pressStart) / StudySettings.PressToSelectSceneOrderDuration;
+            }
+
+            progress.gameObject.SetActive(false);
+            if (KeyPressed())
+                break;
+        }
+        onFinished?.Invoke(keyCodes.First(Input.GetKey));
+
+        yield break;
+        bool KeyPressed() => keyCodes.Any(Input.GetKey);
     }
 }

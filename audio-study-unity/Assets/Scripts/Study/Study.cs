@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -11,19 +12,6 @@ public class Study : MonoBehaviour
     public StudyData data = new();
 
     const string TutorialScene = "Tutorial";
-
-    readonly string[] _scenes =
-    {
-        "Room3", "Room2", "Room1",
-    };
-
-    readonly AudioConfiguration[] _audioConfigurations =
-    {
-        AudioConfiguration.Basic,
-        AudioConfiguration.Pathing,
-        AudioConfiguration.Mixed
-    };
-
 
     static bool _instantiated;
 
@@ -52,11 +40,6 @@ public class Study : MonoBehaviour
 
     IEnumerator Start()
     {
-        _audioConfigurations.Shuffle(); // observe random
-        _exportPath = "StudyData"
-                      + (Application.isEditor ? "_Editor" : "")
-                      + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
-
         return DoStudy();
     }
 
@@ -65,11 +48,28 @@ public class Study : MonoBehaviour
         References.AudioPaused = true;
         References.Player.canMove = false;
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt(new LocalText("Welcome to the Study", "Willkommen zur Studie"));
+        var index = -1;
+        var sceneOrder = default(SceneOrder[]);
+        yield return SceneOrder.WaitForChoice(
+            new LocalText(
+                "Welcome to the Study!\nWait for instructions to proceed",
+                "Willkommen zur Studie!\nWarten sie auf Anweisungen um fortzufahren"
+            ),
+            (s, i) =>
+            {
+                sceneOrder = s;
+                index = i;
+            });
         /*------------------------------------------------*/
-        // yield return DoTutorial();
+
+        _exportPath = "StudyData"
+                      + (Application.isEditor ? "_Editor" : "")
+                      + $" Order{index}"
+                      + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
         /*------------------------------------------------*/
-        foreach (var (scene, audioConfig) in _scenes.Zip(_audioConfigurations, (s, a) => (s, a)))
+        yield return DoTutorial();
+        /*------------------------------------------------*/
+        foreach (var (scene, audioConfig) in sceneOrder)
         {
             /*------------------------------------------------*/
             yield return DoScenario(scene, audioConfig);
@@ -82,6 +82,7 @@ public class Study : MonoBehaviour
 
     IEnumerator DoTutorial()
     {
+        yield return UI.WaitForPrompt("Tutorial");
         /*------------------------------------------------*/
         yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
         /*------------------------------------------------*/
@@ -113,7 +114,9 @@ public class Study : MonoBehaviour
 
         AudioConfig = scenario.audioConfiguration = audioConfiguration;
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt($"{scene}\nAudio config: {(int)audioConfiguration}");
+        yield return UI.WaitForPrompt(new LocalText(
+            "Info: The environment and audio configuration have changed", 
+            "Info: Die Umgebung and Audio Konfiguration wurden geändert"));
         /*------------------------------------------------*/
         yield return Navigation.DoTasks(scenario.navigationTasks);
         yield return Localization.DoTasks(scenario.localizationTasks);
@@ -147,4 +150,68 @@ public class Study : MonoBehaviour
             };
         }
     }
+}
+
+
+public record SceneOrder(string Scene, AudioConfiguration AudioConfiguration)
+{
+    public static IEnumerator WaitForChoice(string instructions, Action<SceneOrder[], int> chosenOrder)
+    {
+        var ui = UI.Singleton;
+        ui.screenText.text = instructions;
+        yield return UI.WaitForKeySelect(
+            key => chosenOrder.Invoke(PossibleSceneOrders[Keys[key]], Keys[key]),
+            Keys.Keys.ToArray());
+        ui.bottomText.text = ui.screenText.text = "";
+    }
+
+    static readonly SceneOrder[][] PossibleSceneOrders =
+    {
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Basic),
+            new("Room2", AudioConfiguration.Pathing),
+            new("Room3", AudioConfiguration.Mixed)
+        },
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Basic),
+            new("Room2", AudioConfiguration.Mixed),
+            new("Room3", AudioConfiguration.Pathing)
+        },
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Pathing),
+            new("Room2", AudioConfiguration.Basic),
+            new("Room3", AudioConfiguration.Mixed)
+        },
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Pathing),
+            new("Room2", AudioConfiguration.Mixed),
+            new("Room3", AudioConfiguration.Basic)
+        },
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Mixed),
+            new("Room2", AudioConfiguration.Basic),
+            new("Room3", AudioConfiguration.Pathing)
+        },
+        new SceneOrder[]
+        {
+            new("Room1", AudioConfiguration.Mixed),
+            new("Room2", AudioConfiguration.Pathing),
+            new("Room3", AudioConfiguration.Basic)
+        },
+    };
+
+    static readonly IReadOnlyDictionary<KeyCode, int> Keys = new Dictionary<KeyCode, int>
+    {
+        [KeyCode.Alpha1] = 0,
+        [KeyCode.Alpha2] = 1,
+        [KeyCode.Alpha3] = 2,
+        [KeyCode.Alpha4] = 3,
+        [KeyCode.Alpha5] = 4,
+        [KeyCode.Alpha6] = 5,
+    };
 }
