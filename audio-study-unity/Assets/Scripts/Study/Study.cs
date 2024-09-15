@@ -48,7 +48,7 @@ public class Study : MonoBehaviour
         References.AudioPaused = true;
         References.Player.canMove = false;
         /*------------------------------------------------*/
-        var index = -1;
+        var orderIndex = -1;
         var sceneOrder = default(SceneOrder[]);
         yield return SceneOrder.WaitForChoice(
             new LocalText(
@@ -58,33 +58,39 @@ public class Study : MonoBehaviour
             (s, i) =>
             {
                 sceneOrder = s;
-                index = i;
+                orderIndex = i;
             });
         /*------------------------------------------------*/
 
         _exportPath = "StudyData"
                       + (Application.isEditor ? "_Editor" : "")
-                      + $" Order{index}"
+                      + $" Order{orderIndex}"
                       + DateTime.Now.ToString(" (dd.MM.yyyy-HH.mm)");
         /*------------------------------------------------*/
         yield return DoTutorial();
         /*------------------------------------------------*/
+        var scenarioNumber = 1;
         foreach (var (scene, audioConfig) in sceneOrder)
         {
             /*------------------------------------------------*/
-            yield return DoScenario(scene, audioConfig);
+            yield return DoScenario(scene, audioConfig,
+                new LocalText(
+                    $"Scenario {scenarioNumber}/{sceneOrder.Length}",
+                    $"Szenario {scenarioNumber}/{sceneOrder.Length}"));
             /*------------------------------------------------*/
+            ++scenarioNumber;
         }
 
         Export("Final");
         UI.Singleton.screenText.text = new LocalText("Completed the study!", "Studie abgeschlossen!");
+        UI.Singleton.bottomText.text = "";
+        References.AudioPaused = true;
     }
 
     IEnumerator DoTutorial()
     {
-        yield return UI.WaitForPrompt("Tutorial");
         /*------------------------------------------------*/
-        yield return DoScenario(TutorialScene, AudioConfiguration.Basic);
+        yield return DoScenario(TutorialScene, AudioConfiguration.Basic, "Tutorial");
         /*------------------------------------------------*/
         data.scenarios.Clear();
         /*------------------------------------------------*/
@@ -94,7 +100,7 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
     }
 
-    IEnumerator DoScenario(string scene, AudioConfiguration audioConfiguration)
+    IEnumerator DoScenario(string scene, AudioConfiguration audioConfiguration, string title)
     {
         if (SceneManager.GetActiveScene().name != scene)
         {
@@ -114,9 +120,11 @@ public class Study : MonoBehaviour
 
         AudioConfig = scenario.audioConfiguration = audioConfiguration;
         /*------------------------------------------------*/
-        yield return UI.WaitForPrompt(new LocalText(
-            "Info: The environment and audio configuration have changed", 
-            "Info: Die Umgebung and Audio Konfiguration wurden geändert"));
+        yield return UI.WaitForPrompt(
+            title
+            + "\n" + new LocalText(
+                "Info: The environment and audio configuration have changed",
+                "Info: Die Umgebung und Audio Konfiguration wurden geändert"));
         /*------------------------------------------------*/
         yield return Navigation.DoTasks(scenario.navigationTasks);
         yield return Localization.DoTasks(scenario.localizationTasks);

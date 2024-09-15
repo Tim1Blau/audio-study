@@ -196,7 +196,7 @@ PrefabInstance:
       objectReference: {fileID: -2628482395200241503, guid: 8f6cb46959fa91e4eb161176bd59b5cc, type: 3}
     - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: navigationSeed
-      value: 3
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: localizationSeed
@@ -6244,11 +6244,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 14.83
+      value: 15.54
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 11.43
+      value: 11.74
       objectReference: {fileID: 0}
     - target: {fileID: 6105823096639859286, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

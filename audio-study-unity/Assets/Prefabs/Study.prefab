@@ -3218,7 +3218,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 850, y: 1052}
+  m_SizeDelta: {x: 860, y: 1052}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1388430744004940111
 CanvasRenderer:
@@ -3250,7 +3250,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 65
+    m_FontSize: 60
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
@@ -3261,10 +3261,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Task 1: Navigation
-
-    Here you need to find audio sources as quickly
-    as possible'
+  m_Text: "Es folgt: Beispielaudiopositionen \nNutzen Sie diese als Referenz, um
+    die Position der Audioquelle bestimmen zu k\xF6nnen\nTipp: Achten Sie auf die
+    Richtung und Lautst\xE4rke des Tons"
 --- !u!1 &8354128781607501868
 GameObject:
   m_ObjectHideFlags: 0

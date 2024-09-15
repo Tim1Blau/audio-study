@@ -32,10 +32,10 @@ public static class Localization
             yield return UI.WaitForPrompt(new LocalText(
                 "Next: Example audio positions"
                 + "\nUse these as reference to determine the position of the audio source"
-                + "\nTip: Pay close attention to the direction and volume of the sound",
-                "Es folgt: Beispielaudiopositonen"
-                + "\nNutzen Sie diese als Referenz um die Position der Audioquelle bestimmen zu können"
-                + "\nTipp: Achten Sie auf die Richtung und Lautstärke des Tons"
+                + "\nTip: Pay close attention to the direction and distance of the sound",
+                "Es folgen Beispielaudiopositonen."
+                + "\nNutzen Sie diese als Referenz, um die Position der Audioquelle bestimmen zu können"
+                + "\nTipp: Achten Sie auf die Richtung und Distanz des Tons"
             ));
             /*------------------------------------------------*/
             // REFERENCES //
@@ -82,9 +82,7 @@ public static class Localization
             "Example audio positions...",
             "Beispielaudiopositonen..."
         );
-        var referencePositions = StudySettings.Singleton.RandomAudioPositions(StudySettings.LocReferencePosCount,
-            StudySettings.LocReferenceDistanceBetween);
-        foreach (var position in referencePositions)
+        foreach (var position in StudySettings.Singleton.GenerateReferencePositions())
         {
             Map.mapPin.color = Color.green;
             Map.mapPin.transform.position = position.XZ();
@@ -101,7 +99,7 @@ public static class Localization
         Map.IsFocused = false;
         Map.map.color = Color.white;
     }
-
+    
     static IEnumerator ShowCorrectPosition(Vector2 position)
     {
         const float seconds = 0.7f;

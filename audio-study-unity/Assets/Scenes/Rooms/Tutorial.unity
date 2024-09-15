@@ -204,7 +204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: localizationSeed
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4884232569388680084, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: scenarioSettings
@@ -27016,11 +27016,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.8
+      value: 15.52
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.26
+      value: 11.4
       objectReference: {fileID: 0}
     - target: {fileID: 7583426533097986480, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_AnchorMax.x
