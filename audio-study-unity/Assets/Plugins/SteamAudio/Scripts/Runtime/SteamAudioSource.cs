@@ -423,6 +423,12 @@ namespace SteamAudio
                 outputs.pathing.eqCoeffsLow = Mathf.Max(0.1f, outputs.pathing.eqCoeffsLow);
                 outputs.pathing.eqCoeffsMid = Mathf.Max(0.1f, outputs.pathing.eqCoeffsMid);
                 outputs.pathing.eqCoeffsHigh = Mathf.Max(0.1f, outputs.pathing.eqCoeffsHigh);
+                
+                // var shCoeffs = outputs.pathing.shCoeffs;
+                // var f = new float[4];
+                // Marshal.Copy(shCoeffs, f, 0, 4);
+                // var vector = Common.ConvertVector(new Vector3 { x = f[1], y = f[2], z = f[3] }) / f[0];
+                // Debug.DrawRay(Common.ConvertVector(outputs.pathing.listener.origin), vector * 50.0f, Color.green, 0.1f);
             }
         }
 
