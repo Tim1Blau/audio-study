@@ -49,6 +49,8 @@ public class Player : MonoBehaviour
         var moveDir = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveDir = camera.transform.localRotation * moveDir;
         moveDir.y = 0.0f;
+        var mag = moveDir.magnitude;
+        if (mag > 1f) moveDir /= mag;
         _characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
     }
 }
