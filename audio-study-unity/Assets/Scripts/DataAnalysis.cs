@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ClosedXML.Excel;
 using UnityEditor;
@@ -10,6 +12,123 @@ using UnityEngine;
 
 namespace Analysis
 {
+    public class DataAnalysis : EditorWindow
+    {
+        private string? path;
+        private StudyData? data;
+
+        [MenuItem("Audio Study/Analysis Window")]
+        public static void ShowWindow() => GetWindow<DataAnalysis>("Json File Viewer");
+
+        void OnGUI()
+        {
+            GUILayout.Label("JSON File Viewer", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("Select JSON File"))
+            {
+                var p = EditorUtility.OpenFilePanel("Select JSON file", "", "json");
+
+                if (!string.IsNullOrEmpty(p))
+                {
+                    var d = JsonData.Import(p);
+                    if (d is not null)
+                    {
+                        this.path = p;
+                        this.data = d;
+                    }
+                }
+            }
+
+
+            GUILayout.Space(10);
+
+            if (path is not null)
+            {
+                GUILayout.Label("Selected File: " + Path.GetFileName(path));
+            }
+            else
+            {
+                GUILayout.Label("No StudyData Loaded");
+                return;
+            }
+            
+            if (data is null) return;
+
+
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("Debug"))
+            {
+                Debug.Log("DEBUG DATA");
+            }
+
+            if (GUILayout.Button("Normalisis"))
+            {
+                // 5.2 can still happen under normal circumstances, analyze fr later
+                var speed = data.scenarios.SelectMany(s => s.navigationTasks).SelectMany(nav =>
+                {
+                    var first = nav.frames.FirstOrDefault();
+                    var prevPosition = first?.position ?? Vector2.zero;
+                    var prevTime = first?.time ?? 0f;
+                    return nav.frames.Select(frame =>
+                    {
+                        var res =  Vector2.Distance(frame.position, prevPosition) / (frame.time - prevTime);
+                        prevPosition = frame.position;
+                        prevTime = frame.time;
+                        return res;
+                    });
+                }).ToList();
+                
+                speed.Sort();
+                Debug.Log(speed);
+            }
+        }
+
+        [MenuItem("Audio Study/Export Example Data", false, 1)]
+        public static void ExportExampleData()
+        {
+            JsonData.Export(new StudyData());
+        }
+
+        [MenuItem("Audio Study/Analyze Duration", false, 1)]
+        public static void Duration()
+        {
+            var path = EditorUtility.OpenFilePanel("Select StudyData", "", "json");
+            var data = JsonData.Import(path) ?? throw new Exception("Failed to load data");
+
+            Debug.Log($"Data {path}\n" + string.Join("\n--------------\n",
+                data.scenarios.Select(s =>
+                    $"Scenario {s.scene}-{s.audioConfiguration}: {s.Duration().Format()}"
+                    + $"\n Navigation   {s.navigationTasks.Duration().Format()} for {s.navigationTasks.Count} positions | avg nav time:   {s.navigationTasks.Average(t => t.Duration()).Format()}"
+                    + $"\n Localization {s.localizationTasks.Duration().Format()} for {s.localizationTasks.Count} positions | avg guess time: {s.localizationTasks.Average(t => t.Duration()).Format()}"
+                ))
+            );
+        }
+
+        [MenuItem("Audio Study/Normalize", false, 1)]
+        public static void Normalize()
+        {
+            var path = EditorUtility.OpenFilePanel("Select StudyData", "", "json");
+            var data = JsonData.Import(path) ?? throw new Exception("Failed to load data");
+            data.Normalize();
+            JsonData.Export(data, path[..^5] + " Norm");
+        }
+
+        public static float PathLength(List<Vector2> path)
+        {
+            if (path.Count == 0) return 0;
+            var last = path.First();
+            var distance = 0.0f;
+            foreach (var pos in path)
+            {
+                distance += Vector2.Distance(last, pos);
+                last = pos;
+            }
+
+            return distance;
+        }
+    }
+
     public record DataBatch(IReadOnlyList<StudyData> Data);
 
     internal static class TaskDuration
@@ -65,57 +184,60 @@ namespace Analysis
         }
     }
 
-
-    public class DataAnalysis : MonoBehaviour
+    internal static class Penality
     {
-        [MenuItem("z Audio Study/Export Example Data", false, 1)]
-        public static void ExportExampleData()
+        public static void Normalize(this StudyData data)
         {
-            JsonData.Export(new StudyData());
-        }
-        
-        [MenuItem("z Audio Study/Analyze Duration", false, 1)]
-        public static void Duration()
-        {
-            string path = EditorUtility.OpenFilePanel("Overwrite with png", "", "json");
-            var data = JsonData.Import(path) ?? throw new Exception("Failed to load data");
-
-            Debug.Log($"Data {path}\n" + string.Join("\n--------------\n",
-                data.scenarios.Select(s =>
-                    $"Scenario {s.scene}-{s.audioConfiguration}: {s.Duration().Format()}"
-                    + $"\n Navigation   {s.navigationTasks.Duration().Format()  } for {s.navigationTasks.Count  } positions | avg nav time:   {s.navigationTasks.Average(t => t.Duration()).Format()}"
-                    + $"\n Localization {s.localizationTasks.Duration().Format()} for {s.localizationTasks.Count} positions | avg guess time: {s.localizationTasks.Average(t => t.Duration()).Format()}"
-                ))
-            );
-        }
-
-        static StudyData OpenFilePanel()
-        {
-            var path = EditorUtility.OpenFilePanel("Overwrite with png", "", "json");
-            return JsonData.Import(path) ?? throw new Exception("Failed to load data");
-        }
-
-
-        public static float PathLength(List<Vector2> path)
-        {
-            if (path.Count == 0) return 0;
-            var last = path.First();
-            var distance = 0.0f;
-            foreach (var pos in path)
+            var penalty = 0f;
+            (int normal, int exploit) count = (0, 0);
+            foreach (var scenario in data.scenarios)
             {
-                distance += Vector2.Distance(last, pos);
-                last = pos;
+                foreach (var navigation in scenario.navigationTasks)
+                {
+                    navigation.startTime += penalty;
+                    var first = navigation.frames.FirstOrDefault();
+                    var prevPosition = first?.position ?? Vector2.zero;
+                    var prevTime = first?.time ?? 0f;
+                    foreach (var frame in navigation.frames)
+                    {
+                        var deltaTime = frame.time - prevTime;
+                        prevTime = frame.time;
+                        frame.time += penalty;
+                        var distance = Vector2.Distance(prevPosition, frame.position);
+                        if (distance > (Player.movementSpeed + 1f) * deltaTime)
+                        {
+                            penalty += distance / Player.movementSpeed;
+                            count.exploit++;
+                        }
+                        else
+                        {
+                            if (distance > 0.1f) count.normal++;
+                        }
+
+                        prevPosition = frame.position;
+                    }
+
+                    navigation.endTime += penalty;
+                }
+
+                foreach (var localization in scenario.localizationTasks)
+                {
+                    localization.startTime += penalty;
+                    localization.endTime += penalty;
+                }
             }
 
-            return distance;
+            Debug.Log($"Total penalty: {penalty}s");
+            Debug.Log($"Abuse rate: {(float)count.exploit / (count.normal + count.exploit) * 100f}%");
         }
     }
+
 
     public static class XLUtils
     {
         const string ExportPath = "ExampleExport1.xlsx";
 
-        [MenuItem("z Audio Study/AnalyzeDemoToExcel", false, 1)]
+        [MenuItem("Audio Study/AnalyzeDemoToExcel", false, 1)]
         public static void AnalyzeDemoToExcel()
         {
             if (JsonData.Import("DemoStudyData.json") is not { } data)

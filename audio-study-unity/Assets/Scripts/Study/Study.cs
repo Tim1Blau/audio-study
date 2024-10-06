@@ -24,8 +24,13 @@ public class Study : MonoBehaviour
         DontDestroyOnLoad(new GameObject(nameof(Study)).AddComponent<Study>());
     }
 
+    private Vector2 position;
+
     void Update()
     {
+        Debug.Log($"Speed: {Vector2.Distance(position, References.PlayerPosition) /Time.deltaTime }m/s");
+        
+        position = References.PlayerPosition;
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
             Export("Backup");
 

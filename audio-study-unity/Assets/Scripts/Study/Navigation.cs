@@ -15,6 +15,8 @@ public static class Navigation
             "Navigation:" +
             "\nFinden Sie die Audioquelle so schnell wie möglich"
         ));
+        if (Application.isEditor && Input.GetKey(KeyCode.R)) yield break;
+
         References.Player.canMove = true;
 
         var coroutineHolder = UnityEngine.Object.FindObjectOfType<Study>();

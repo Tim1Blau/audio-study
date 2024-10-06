@@ -19,6 +19,7 @@ public static class Localization
                 "Lokalisierung:"
                 + "\nErraten Sie die Position der Audioquelle, ohne sich zu bewegen"
             ));
+        if (Application.isEditor && Input.GetKey(KeyCode.R)) yield break;
         References.Player.canMove = false;
         Map.enabled = true;
 

@@ -4,9 +4,9 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
 {
-    [SerializeField] float maxVerticalLookAngle = 80.0f;
-    [SerializeField] float sensitivity = 2.0f;
-    [SerializeField] float movementSpeed = 5.0f;
+    [SerializeField] public const float maxVerticalLookAngle = 80.0f;
+    [SerializeField] public const float sensitivity = 1.5f;
+    [SerializeField] public const float movementSpeed = 5.0f;
     [SerializeField] public new Camera camera;
     public bool canMove = true;
 
@@ -28,7 +28,7 @@ public class Player : MonoBehaviour
         _characterController = GetComponent<CharacterController>();
         _rotation = camera.transform.localRotation.eulerAngles;
     }
-    
+
 
     void LateUpdate()
     {
@@ -46,9 +46,11 @@ public class Player : MonoBehaviour
         }
 
         // Position
+        // var moveDir = new Vector3(
+        //     (Input.GetKey(KeyCode.D) ? 1 : 0) - (Input.GetKey(KeyCode.A) ? 1 : 0), 0,
+        //     (Input.GetKey(KeyCode.W) ? 1 : 0) - (Input.GetKey(KeyCode.S) ? 1 : 0));
         var moveDir = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-        moveDir = camera.transform.localRotation * moveDir;
-        moveDir.y = 0.0f;
+        moveDir = Quaternion.Euler(0, _rotation.x, 0) * moveDir;
         var mag = moveDir.magnitude;
         if (mag > 1f) moveDir /= mag;
         _characterController.SimpleMove((canMove ? movementSpeed : 0f) * moveDir);
