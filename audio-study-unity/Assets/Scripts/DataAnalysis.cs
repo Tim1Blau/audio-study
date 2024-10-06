@@ -1,58 +1,208 @@
 #if UNITY_EDITOR
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ClosedXML.Excel;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Analysis
 {
+    [Serializable]
+    public record AnalyzedData
+    {
+        public QuestionData answers = new();
+        public List<AnalyzedScenario> scenarios = new();
+
+        public static IEnumerator From(StudyData data, Action<AnalyzedData> result)
+        {
+            var res = new AnalyzedData { answers = data.answers };
+            foreach (var scenario in data.scenarios)
+            {
+                yield return AnalyzedScenario.From(scenario, res.scenarios.Add);
+            }
+
+            result.Invoke(res);
+        }
+    }
+
+    [Serializable]
+    public record AnalyzedScenario
+    {
+        public AudioConfiguration audioConfiguration;
+        public string scene = "";
+        public List<NavigationTask> navigationTasks = new();
+        public List<AnalyzedLocalizationTask> localizationTasks = new();
+
+        public static IEnumerator From(Scenario scenario, Action<AnalyzedScenario> result)
+        {
+            SceneManager.LoadScene(scenario.scene);
+            yield return new WaitForNextFrameUnit();
+            Study.AudioConfig = AudioConfiguration.Pathing;
+            yield return new WaitForNextFrameUnit();
+
+            var aScenario = new AnalyzedScenario
+            {
+                audioConfiguration = scenario.audioConfiguration,
+                scene = scenario.scene,
+                navigationTasks = scenario.navigationTasks,
+            };
+
+            int i = 0;
+            foreach (var t in scenario.localizationTasks)
+            {
+                var playerToGuess = t.guessedPosition - t.listenerPosition;
+                var playerToActual = t.audioPosition - t.listenerPosition;
+                var aLoc = new AnalyzedLocalizationTask
+                {
+                    listenerPosition = t.listenerPosition,
+                    audioPosition = t.audioPosition,
+                    startTime = t.startTime,
+                    endTime = t.endTime,
+                    guessedPosition = t.guessedPosition,
+                    audioPath = t.audioPath,
+
+                    guessStraightDistance = playerToGuess.magnitude,
+                    actualStraightDistance = playerToActual.magnitude,
+                    guessAngleDifference = Vector2.Angle(playerToActual, playerToGuess)
+                };
+                UI.Singleton.screenText.text = $"task {i + 1} / {scenario.localizationTasks.Count}";
+
+                yield return Path(t.guessedPosition, t.listenerPosition, r => aLoc.guessPathingDistance = r);
+                yield return Path(t.audioPosition, t.listenerPosition, r => aLoc.actualPathingDistance = r);
+                yield return Path(t.guessedPosition, t.audioPosition, r => aLoc.guessToActualPathingDistance = r);
+                aScenario.localizationTasks.Add(aLoc);
+                i++;
+            }
+
+            UI.Singleton.screenText.text = "Finished scenario";
+
+            result.Invoke(aScenario);
+            yield break;
+
+            IEnumerator Path(Vector2 from, Vector2 to, Action<float> result)
+            {
+                References.AudioPosition = from;
+                References.PlayerPosition = to;
+                yield return new WaitForNextFrameUnit();
+                yield return PathingRecorder.WaitForPathingData(r => result.Invoke(DataAnalysis.PathLength(r)));
+            }
+        }
+    }
+
+    [Serializable]
+    public record AnalyzedLocalizationTask
+    {
+        public Vector2 listenerPosition;
+        public Vector2 audioPosition;
+        public float startTime = -1;
+        public float endTime = -1;
+        public Vector2 guessedPosition = Vector2.zero;
+        public AudioPath audioPath = new();
+
+        /* Analysis */
+
+        public float guessStraightDistance;
+        public float actualStraightDistance;
+
+        public float guessPathingDistance;
+        public float actualPathingDistance;
+        public float guessToActualPathingDistance;
+
+        public float guessAngleDifference;
+    }
+
+
     public class DataAnalysis : EditorWindow
     {
-        private string? path;
-        private StudyData? data;
+        private string? _path;
+        private StudyData? _data;
+
+        private string? _multiPath;
+        private StudyData[]? _multiData;
+
+        private bool singleMode;
+
+        [NonSerialized] private bool analyzing = false;
 
         [MenuItem("Audio Study/Analysis Window")]
-        public static void ShowWindow() => GetWindow<DataAnalysis>("Json File Viewer");
+        public static void ShowWindow() => GetWindow<DataAnalysis>("Analysis");
 
         void OnGUI()
         {
-            GUILayout.Label("JSON File Viewer", EditorStyles.boldLabel);
-
-            if (GUILayout.Button("Select JSON File"))
+            GUILayout.Label("Analysis", EditorStyles.boldLabel);
+            singleMode = GUILayout.Toggle(singleMode, "Single Mode");
+            if (singleMode)
             {
-                var p = EditorUtility.OpenFilePanel("Select JSON file", "", "json");
-
-                if (!string.IsNullOrEmpty(p))
+                if (_path is not null) GUILayout.Label("Selected File: " + Path.GetFileName(_path));
+                else GUILayout.Label("No StudyData Loaded");
+                
+                if (GUILayout.Button("Select File"))
                 {
-                    var d = JsonData.Import(p);
-                    if (d is not null)
+                    var p = EditorUtility.OpenFilePanel("Select StudyData", "", "json");
+                    if (!string.IsNullOrEmpty(p))
                     {
-                        this.path = p;
-                        this.data = d;
+                        var d = JsonData.Import(p);
+                        if (d is not null)
+                        {
+                            this._path = p;
+                            this._data = d;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (_multiPath is not null) GUILayout.Label("Selected File: " + Path.GetFileName(_multiPath));
+                else GUILayout.Label("No StudyData Loaded");
+
+                if (GUILayout.Button("Select File"))
+                {
+                    var p = EditorUtility.OpenFolderPanel("Select StudyData", "", "");
+                    if (!string.IsNullOrEmpty(p))
+                    {
+                        try
+                        {
+                            var files = Directory.GetFiles(p, "StudyData*.json");
+                            var d = files.Select(JsonData.Import).ToArray();
+                            if (d.All(x => x is not null))
+                            {
+                                _multiPath = p;
+                                _multiData = d;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
                     }
                 }
             }
 
-
-            GUILayout.Space(10);
-
-            if (path is not null)
+            StudyData[] data;
+            if (singleMode)
             {
-                GUILayout.Label("Selected File: " + Path.GetFileName(path));
+                if (_data is null) return;
+                data = new[] { _data };
             }
             else
             {
-                GUILayout.Label("No StudyData Loaded");
-                return;
+                if(_multiData is null) return;
+                data = _multiData;
             }
             
-            if (data is null) return;
+            GUILayout.Space(10);
+
+
+            if (_data is null) return;
 
 
             GUILayout.Space(10);
@@ -62,23 +212,42 @@ namespace Analysis
                 Debug.Log("DEBUG DATA");
             }
 
+            if (analyzing)
+            {
+                GUILayout.Button("Analyzing...");
+            }
+            else if (GUILayout.Button("Localization Performance"))
+            {
+                analyzing = true;
+                EditorApplication.EnterPlaymode();
+                SceneManager.LoadScene(_data.scenarios.First().scene);
+                var co = FindObjectOfType<Study>();
+                foreach (var studyData in data)
+                {
+                    co.StartCoroutine(AnalyzedData.From(studyData, res =>
+                    {
+                        analyzing = false;
+                    }));
+                }
+            }
+
             if (GUILayout.Button("Normalisis"))
             {
                 // 5.2 can still happen under normal circumstances, analyze fr later
-                var speed = data.scenarios.SelectMany(s => s.navigationTasks).SelectMany(nav =>
+                var speed = _data.scenarios.SelectMany(s => s.navigationTasks).SelectMany(nav =>
                 {
                     var first = nav.frames.FirstOrDefault();
                     var prevPosition = first?.position ?? Vector2.zero;
                     var prevTime = first?.time ?? 0f;
                     return nav.frames.Select(frame =>
                     {
-                        var res =  Vector2.Distance(frame.position, prevPosition) / (frame.time - prevTime);
+                        var res = Vector2.Distance(frame.position, prevPosition) / (frame.time - prevTime);
                         prevPosition = frame.position;
                         prevTime = frame.time;
                         return res;
                     });
                 }).ToList();
-                
+
                 speed.Sort();
                 Debug.Log(speed);
             }
@@ -114,12 +283,12 @@ namespace Analysis
             JsonData.Export(data, path[..^5] + " Norm");
         }
 
-        public static float PathLength(List<Vector2> path)
+        public static float PathLength(AudioPath path)
         {
-            if (path.Count == 0) return 0;
-            var last = path.First();
+            if (path.points.Count == 0) return 0;
+            var last = path.points.First();
             var distance = 0.0f;
-            foreach (var pos in path)
+            foreach (var pos in path.points)
             {
                 distance += Vector2.Distance(last, pos);
                 last = pos;
@@ -265,7 +434,7 @@ namespace Analysis
                 row.Cell(++c).Value = d.frame.time;
                 row.Cell(++c).Value = d.Efficiency;
                 row.Cell(++c).Value = d.frame.audioPath.points.Count;
-                row.Cell(++c).Value = DataAnalysis.PathLength(d.frame.audioPath.points);
+                row.Cell(++c).Value = DataAnalysis.PathLength(d.frame.audioPath);
             }
 
             workbook.SaveAs("DemoStudyData_Efficiency.xlsx");
