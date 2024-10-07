@@ -82,6 +82,22 @@ public record AudioPath
 {
     public bool isOccluded; // if true, the path may be invalid
     public List<Vector2> points = new();
+    public float Length 
+    {
+        get
+        {
+            if (points.Count == 0) return 0;
+            var last = points[0];
+            var distance = 0.0f;
+            foreach (var pos in points)
+            {
+                distance += Vector2.Distance(last, pos);
+                last = pos;
+            }
+
+            return distance;    
+        }
+    }
 }
 
 

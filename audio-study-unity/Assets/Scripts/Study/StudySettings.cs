@@ -8,6 +8,8 @@ using Random = UnityEngine.Random;
 
 public class StudySettings : SingletonBehaviour<StudySettings>
 {
+    public GameObject pin;
+    
     public ScenarioSettings scenarioSettings;
     public int navigationSeed = 1;
     public int localizationSeed = 2;

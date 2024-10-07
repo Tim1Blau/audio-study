@@ -379,6 +379,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1f221a24d96cca428d48b7e94370a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pin: {fileID: 0}
   scenarioSettings: {fileID: 11400000, guid: 11236284df901004183a3f2657630def, type: 2}
   navigationSeed: 1
   localizationSeed: 2
