@@ -28,7 +28,7 @@ public class UI : SingletonBehaviour<UI>
     void Update()
     {
         Map.Singleton.playerPin.transform.SetPositionAndRotation(
-            References.Player.transform.position.WithY(0),
+            References.Player.transform.position.WithY(0.1f),
             Quaternion.Euler(90, References.Player.camera.transform.rotation.eulerAngles.y, 0)
         );
     }

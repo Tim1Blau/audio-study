@@ -42,6 +42,17 @@ public static class Utils
 
     public static T? RandomIndex<T>(this IReadOnlyList<T> l) where T: struct =>
         l.Count == 0 ? null : l[Random.Range(0, l.Count - 1)];
+    
+    public static void DebugDrawPath(this AudioPath path, Color color, float duration)
+    {
+        var pre = path.points.FirstOrDefault();
+        foreach (var next in path.points.Skip(1))
+        {
+            const float y = 3.0f;
+            Debug.DrawLine(pre.XZ(y), next.XZ(y), color, duration, true);
+            pre = next;
+        }
+    }
 }
 
 

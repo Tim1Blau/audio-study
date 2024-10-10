@@ -203,6 +203,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Study
       objectReference: {fileID: 0}
+    - target: {fileID: 2877759110140780757, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
+      propertyPath: m_Volume
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3362628681025878830, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: asset
       value: 
@@ -6273,11 +6277,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 15.54
+      value: 6.8750005
       objectReference: {fileID: 0}
     - target: {fileID: 5557702835705175176, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 11.74
+      value: 16.875
       objectReference: {fileID: 0}
     - target: {fileID: 6105823096639859286, guid: c4b7bc948443e8f4e988f8288e113a97, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

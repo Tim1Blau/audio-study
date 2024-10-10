@@ -1,10 +1,8 @@
-#if UNITY_EDITOR
 #nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 public class MapPin : MonoBehaviour
@@ -17,7 +15,7 @@ public class MapPin : MonoBehaviour
     void Update()
     {
         var toDraw = showPrimaryPath ? _pathsToDraw.Take(1) : _pathsToDraw.Skip(1);
-        foreach (var audioPath in toDraw) DrawPath(audioPath, _color, Time.deltaTime);
+        foreach (var audioPath in toDraw) audioPath.DebugDrawPath(_color, Time.deltaTime);
     }
 
     public static void Create(Vector2 position, Color color, float size, AudioPath[] paths)
@@ -46,23 +44,7 @@ public class MapPin : MonoBehaviour
 
     public static void Clear()
     {
-        foreach (var gameObject in Objects)
-        {
-            Object.Destroy(gameObject);
-        }
-
+        Objects.ForEach(DestroyImmediate);
         Objects.Clear();
     }
-
-    static void DrawPath(AudioPath path, Color color, float duration)
-    {
-        var pre = path.points.FirstOrDefault();
-        foreach (var next in path.points.Skip(1))
-        {
-            const float y = 3.0f;
-            Debug.DrawLine(pre.XZ(y), next.XZ(y), color, duration, true);
-            pre = next;
-        }
-    }
 }
-#endif
