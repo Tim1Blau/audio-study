@@ -109,13 +109,8 @@ public class DataAnalysis : EditorWindow
         _                          => throw new ArgumentOutOfRangeException()
     };
 
-    struct A
-    {
-        public int TaskIndex;
-        public AudioConfiguration AudioConfig;
-    }
-
-    List<IGrouping<int, List<IGrouping<AudioConfiguration, NavigationTask>>>> currentNavigationTasks
+    Dictionary<int, Dictionary<AudioConfiguration, (List<AnalyzedNavigationTask> tasks, TimeSpan averageDuration,
+        TimeSpan geoAverageTime)>> currentNavigationTasks
     {
         get
         {
@@ -123,23 +118,26 @@ public class DataAnalysis : EditorWindow
             var tasksForData = scenarios.SelectMany(scenario =>
             {
                 var tasks = _visNavTaskToolbar.IsAll
-                    ? scenario.navigationTasks.AsEnumerable()
-                    : new[] { scenario.navigationTasks[_visNavTaskToolbar.index] };
-                return tasks.Select((task, taskIndex) => (taskIndex, scenario.audioConfiguration, task));
+                    ? scenario.navigationTasks.Select((task, taskIndex) => (taskIndex, task))
+                    : new[] { (_visNavTaskToolbar.index, scenario.navigationTasks[_visNavTaskToolbar.index]) };
+                return tasks;
             });
-            var group = tasksForData.GroupBy(x => x.taskIndex, x => (x.audioConfiguration, x.task))
-                .Select(tasks =>
+
+            var tasksForIndices = tasksForData.GroupBy(x => x.taskIndex, x => x.task);
+            var result = tasksForIndices.Select(taskForIndex =>
+            {
+                var tasksForConfigs = taskForIndex.GroupBy(t => t.audioConfiguration, t => t);
+                var trimmedTasks = tasksForConfigs.Select(taskForConfig =>
                 {
-                    var trimmedTasks = tasks.GroupBy(t => t.audioConfiguration, t => t.task);
-                    trimmedTasks = trimmedTasks.SelectMany(group =>
-                    {
-                        var ordered = group.OrderBy(task => task.Duration());
-                        var trimmed = Trim(ordered);
-                        return trimmed.Select(task => (group.Key, task));
-                    }).GroupBy(x => x.Key, x => x.task);
-                    return (taskIndex: tasks.Key, tasks: trimmedTasks.ToList());
-                }).GroupBy(x => x.taskIndex, x => x.tasks);
-            return group.ToList();
+                    var ordered = taskForConfig.OrderBy(task => task.Duration);
+                    var trimmed = Trim(ordered).ToList();
+                    var averageDuration = trimmed.Average(t => t.Duration);
+                    var geoAverageTime = trimmed.GeoAverage(t => t.Duration);
+                    return (tasks: trimmed, averageDuration, geoAverageTime);
+                }).ToDictionary(x => x.tasks.First().audioConfiguration);
+                return (taskIndex: taskForIndex.Key, tasks: trimmedTasks);
+            }).ToDictionary(x => x.taskIndex, x => x.tasks);
+            return result;
             // var group = tasksForData.GroupBy(x => new A { TaskIndex = x.taskIndex, AudioConfig = x.audioConfiguration }, x => x.task);
             // var ordered = group.OrderBy(x => x.Select(y => y.Duration()));
             // var trimmed = Trim(ordered);
@@ -161,21 +159,18 @@ public class DataAnalysis : EditorWindow
         if (_analyzedData is null || _visTypeToolbar.value is not VisualizationType.Navigation) return;
         if (_navVisTypeToolbar.value is NavVisType.Path)
         {
-            foreach (var tasksForConfig in currentNavigationTasks.SelectMany(x => x.SelectMany(y => y.AsEnumerable())))
+            foreach (var task in currentNavigationTasks.SelectMany(x =>
+                         x.Value.Values.SelectMany(y => y.tasks)))
             {
-                var audioConfiguration = tasksForConfig.Key;
-                foreach (var task in tasksForConfig)
+                var last = task.frames[0];
+                var color = ColorForAudioConfig(task.audioConfiguration);
+                for (var i = NavPathSampleRate; i < task.frames.Count; i += NavPathSampleRate)
                 {
-                    var last = task.frames[0];
-                    var color = ColorForAudioConfig(audioConfiguration);
-                    for (var i = NavPathSampleRate; i < task.frames.Count; i += NavPathSampleRate)
-                    {
-                        const int y = 3;
-                        var frame = task.frames[i];
-                        Debug.DrawLine(last.position.XZ(y), frame.position.XZ(y), color,
-                            Time.deltaTime * NavPathSampleRate);
-                        last = frame;
-                    }
+                    const int y = 3;
+                    var frame = task.frames[i];
+                    Debug.DrawLine(last.position.XZ(y), frame.position.XZ(y), color,
+                        Time.deltaTime * NavPathSampleRate);
+                    last = frame;
                 }
             }
         }
@@ -204,6 +199,72 @@ public class DataAnalysis : EditorWindow
         }
     }
 
+    void ExportLocalization()
+    {
+        if (_analyzedData is null) return;
+
+        using var workbook = new XLWorkbook();
+        foreach (var scene in _analyzedData.SelectMany(d => d.scenarios).GroupBy(s => s.scene))
+        {
+            var x = workbook.Worksheets.Add($"Localization {scene.Key}");
+            var row = x.Row(1);
+            var cell = row.Cell(1);
+            var numTasks = scene.First().localizationTasks.Count;
+            var audioConfigs = typeof(AudioConfiguration).GetEnumNames();
+            var otherValuesOffset = (numTasks * (audioConfigs.Length+1) + 1);
+
+            // Numbers
+            for (var i = 0; i < numTasks; i++)
+            {
+                var taskIndex = i + 1;
+                foreach (var config in audioConfigs)
+                {
+                    var otherCell = cell.CellRight(otherValuesOffset);
+
+                    var value = $"{taskIndex} {config}";
+                    cell.Value = value;
+                    otherCell.Value = value;
+                    cell.Style.Font.Bold = true;
+                    otherCell.Style.Font.Bold = true;
+                    cell = cell.CellRight();
+                }
+                cell = cell.CellRight();
+            }
+
+            row = row.RowBelow();
+
+
+            // Values
+            var configCell = row.Cell(1);
+            foreach (var config in scene.GroupBy(s => s.audioConfiguration).OrderBy(s => (int)s.Key))
+            {
+                var participantCell = configCell;
+                foreach (var participant in config)
+                {
+                    var taskCell = participantCell;
+                    foreach (var task in participant.localizationTasks)
+                    {
+                        var otherCell = taskCell.CellRight(otherValuesOffset);
+
+                        taskCell.Value = task.guessToAudioStraight.Length;
+                        otherCell.Value = task.guessToAudioPathing.Length;
+
+                        const string format = "#,##0.00";
+                        taskCell.Style.NumberFormat.SetFormat(format);
+                        otherCell.Style.NumberFormat.SetFormat(format);
+                        taskCell = taskCell.CellRight(4);
+                    }
+
+                    participantCell = participantCell.CellBelow();
+                }
+
+                configCell = configCell.CellRight();
+            }
+        }
+
+        workbook.SaveAs("G:/My Drive/Studium/bachelor thesis/results/Localization Results1.xlsx");
+    }
+
     void LocalizationGui()
     {
         if (_analyzedData is null) return;
@@ -227,6 +288,11 @@ public class DataAnalysis : EditorWindow
                     : scenario.localizationTasks.ToArray()
             );
         }).ToArray();
+
+        if (GUILayout.Button("Export To Excel"))
+        {
+            ExportLocalization();
+        }
 
         var allTasksForConfig = tasks.SelectMany(x => x.tasks.Select(task => (x.scenario.audioConfiguration, task)))
             .GroupBy(g => g.audioConfiguration, g => g.task)
@@ -356,9 +422,8 @@ public class DataAnalysis : EditorWindow
         if (_shouldUpdateVisualization)
         {
             MapPin.Clear();
-            foreach (var x in tasks.AsEnumerable().Reverse())
+            foreach (var task in tasks.Values.SelectMany(x => x.Values.First().tasks).Reverse())
             {
-                var task = x.First().First().First();
                 References.PlayerPosition = task.listenerStartPosition;
                 MapPin.Create(task.audioPosition, Color.black, 1f, new[] { task.frames.First().audioPath });
             }
@@ -373,8 +438,8 @@ public class DataAnalysis : EditorWindow
 
                     HeatmapTile.Clear();
 
-                    var tasksWithConfig = tasks.SelectMany(x =>
-                        x.SelectMany(y => y.Single(x => x.Key == _heatmapAudioConfigToolbar.value)));
+                    var tasksWithConfig = tasks.Values.SelectMany(tasksForConfig =>
+                        tasksForConfig[_heatmapAudioConfigToolbar.value].tasks);
 
                     var probe = References.Singleton.probeBatch;
                     var taskPositions = tasksWithConfig.Select(task => Enumerable.ToHashSet(task.frames
@@ -449,47 +514,33 @@ public class DataAnalysis : EditorWindow
 
         if (_trimAverageToolbar.Gui()) _shouldUpdateVisualization = true;
 
-        var averages = tasks.SelectMany(group =>
+        var averages = tasks.Values.SelectMany(t => t)
+            .GroupBy(p => p.Key)
+            .Select(t =>
             {
-                var tasksForConfig = group.SelectMany(x => x.AsEnumerable());
-                var durationForConfig =
-                    tasksForConfig.GroupBy(task => task.Key, task => task.Average(x => x.Duration()));
-                return durationForConfig.SelectMany(x => x.Select(t => (config: x.Key, duration: t)));
-            })
-            .GroupBy(x => x.config, x => x.duration)
-            .OrderBy(x => (int)x.Key)
-            .Select(x => (config: x.Key, duration: x.Average(time => time)))
-            .OrderBy(x => (int)x.config).ToList();
+                return (config: t.Key,
+                        average: t.Average(x => x.Value.averageDuration),
+                        geoAverage: t.Average(x => x.Value.geoAverageTime)
+                    );
+            }).ToList();
 
-        var geoAverages = tasks.SelectMany(group =>
-            {
-                var tasksForConfig = group.SelectMany(x => x.AsEnumerable());
-                var durationForConfig =
-                    tasksForConfig.GroupBy(task => task.Key, task => task.GeoAverage(x => x.Duration()));
-                return durationForConfig.SelectMany(x => x.Select(t => (config: x.Key, duration: t)));
-            })
-            .GroupBy(x => x.config, x => x.duration)
-            .OrderBy(x => (int)x.Key)
-            .Select(x => (config: x.Key, duration: x.Average(time => time)))
-            .OrderBy(x => (int)x.config).ToList();
-
-        var maxDuration = averages.Max(x => x.duration);
-        var maxGeoDuration = geoAverages.Max(x => x.duration);
+        var maxDuration = averages.Max(x => x.average);
+        var maxGeoDuration = averages.Max(x => x.geoAverage);
 
         GUILayout.Label("Geometric Average Time");
-        foreach (var (config, duration) in geoAverages)
+        foreach (var x in averages)
         {
-            EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(),
-                (float)(duration.TotalSeconds / maxGeoDuration.TotalSeconds),
-                $"{config}: {duration.TotalSeconds:F3}s");
+            var seconds = x.geoAverage.TotalSeconds;
+            var value = (float)(seconds / maxGeoDuration.TotalSeconds);
+            EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), value, $"{x.config}: {seconds:F3}s");
         }
 
         GUILayout.Label("Average Time");
-        foreach (var (config, duration) in averages)
+        foreach (var x in averages)
         {
-            EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(),
-                (float)(duration.TotalSeconds / maxDuration.TotalSeconds),
-                $"{config}: {duration.TotalSeconds:F3}s");
+            var seconds = x.average.TotalSeconds;
+            var value = (float)(seconds / maxDuration.TotalSeconds);
+            EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), value, $"{x.config}: {seconds:F3}s");
         }
     }
 

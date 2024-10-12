@@ -20,7 +20,7 @@ public record AnalyzedScenario
 {
     public AudioConfiguration audioConfiguration;
     public string scene = "";
-    public List<NavigationTask> navigationTasks = new();
+    public List<AnalyzedNavigationTask> navigationTasks = new();
     public List<AnalyzedLocalizationTask> localizationTasks = new();
 }
 
@@ -45,6 +45,19 @@ public record AnalyzedLocalizationTask
     public AudioPath guessToAudioPathing = new();
 
     public float guessAngleDifference;
+}
+
+[Serializable]
+public record AnalyzedNavigationTask
+{
+    public AudioConfiguration audioConfiguration;
+    public Vector2 listenerStartPosition;
+    public Vector2 audioPosition;
+
+    public float startTime = -1;
+    public float endTime = -1;
+    public TimeSpan Duration => TimeSpan.FromSeconds(endTime - startTime);
+    public List<NavigationTask.MetricsFrame> frames = new();
 }
 
 public class Progress
@@ -112,8 +125,7 @@ public static class Analysis
             var aScenario = new AnalyzedScenario
             {
                 audioConfiguration = scenario.audioConfiguration,
-                scene = scenario.scene,
-                navigationTasks = scenario.navigationTasks,
+                scene = scenario.scene
             };
             res.scenarios.Add(aScenario);
 
@@ -138,13 +150,13 @@ public static class Analysis
                         { isOccluded = true, points = { t.guessedPosition, t.audioPosition } },
                     guessAngleDifference = Vector2.Angle(playerToActual, playerToGuess)
                 };
-                
+
                 aScenario.localizationTasks.Add(aLoc);
 
                 // yield return Path(t.guessedPosition, t.listenerPosition, r => aLoc.playerToGuessPathing = r);
                 // yield return Path(t.audioPosition, t.listenerPosition, r => aLoc.playerToAudioPathing = r);
-                
             }
+
             int i = 0;
             foreach (var t in aScenario.localizationTasks)
             {
@@ -155,8 +167,19 @@ public static class Analysis
                 progress.OnUpdate?.Invoke();
             }
 
-            foreach (var navigation in scenario.navigationTasks)
+            foreach (var nav in scenario.navigationTasks)
             {
+                var navigation = new AnalyzedNavigationTask
+                {
+                    listenerStartPosition = nav.listenerStartPosition,
+                    audioPosition = nav.audioPosition,
+                    
+                    startTime = nav.startTime,
+                    endTime = nav.endTime, 
+                    frames = nav.frames, 
+                    
+                    audioConfiguration = scenario.audioConfiguration, 
+                };
                 navigation.startTime += penalty;
                 var first = navigation.frames.First();
                 var prevPosition = first?.position ?? Vector2.zero;
@@ -190,6 +213,7 @@ public static class Analysis
                 }
 
                 navigation.endTime += penalty;
+                aScenario.navigationTasks.Add(navigation);
             }
 
             foreach (var localization in scenario.localizationTasks)
