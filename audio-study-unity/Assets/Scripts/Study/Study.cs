@@ -50,11 +50,11 @@ public class Study : MonoBehaviour
         References.Player.canMove = false;
         /*------------------------------------------------*/
         var orderIndex = -1;
-        var sceneOrder = default(SceneOrder[]);
+        SceneOrder[] sceneOrder = null;
         yield return SceneOrder.WaitForChoice(
             new LocalText(
                 "Welcome to the Study!\nWait for instructions to proceed",
-                "Willkommen zur Studie!\nWarten sie auf Anweisungen um fortzufahren"
+                "Willkommen zur Studie!\nWarten Sie auf Anweisungen um fortzufahren"
             ),
             (s, i) =>
             {

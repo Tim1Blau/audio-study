@@ -26,10 +26,15 @@ public class SceneSetupEditor : Editor
     {
         base.OnInspectorGUI();
         if (GUILayout.Button("Setup Scene")) SetupScene();
+        
+        GUILayout.Space(10);
+        GUILayout.Label("Debug");
+        
         if (GUILayout.Button("Visualize Localization")) VisualizeLocalization();
         if (GUILayout.Button("Visualize Navigation")) VisualizeNavigation();
 
-        Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
+        if(Application.isPlaying)
+            Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
     }
 
     static void VisualizeNavigation()
