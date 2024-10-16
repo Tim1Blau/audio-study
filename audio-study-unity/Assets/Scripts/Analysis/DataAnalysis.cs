@@ -148,7 +148,7 @@ public class DataAnalysis : EditorWindow
 
     void OnEnable()
     {
-        foreach (var go in FindObjectsOfType<GameObject>().Where(g => g.name == "TempPin"))
+        foreach (var go in FindObjectsOfType<GameObject>().Where(g => g.name == MapPin.Name))
         {
             DestroyImmediate(go);
         }
@@ -166,10 +166,10 @@ public class DataAnalysis : EditorWindow
                 var color = ColorForAudioConfig(task.audioConfiguration);
                 for (var i = NavPathSampleRate; i < task.frames.Count; i += NavPathSampleRate)
                 {
-                    const int y = 3;
+                    const float y = 0.2f;
                     var frame = task.frames[i];
-                    Debug.DrawLine(last.position.XZ(y), frame.position.XZ(y), color,
-                        Time.deltaTime * NavPathSampleRate);
+                    Debug.DrawLine(last.position.XZ(y), frame.position.XZ(y), color, Time.deltaTime * NavPathSampleRate,
+                        true);
                     last = frame;
                 }
             }
@@ -178,6 +178,11 @@ public class DataAnalysis : EditorWindow
 
     void DataVisGui()
     {
+        if (GUILayout.Button("Export Localization")) ExportLocalization();
+        if (GUILayout.Button("Export Navigation")) ExportNavigation();
+        if (GUILayout.Button("Export Demographics")) ExportDemographics();
+        GUILayout.Space(10);
+
         if (_visTypeToolbar.Gui())
         {
             _shouldUpdateVisualization = true;
@@ -199,10 +204,110 @@ public class DataAnalysis : EditorWindow
         }
     }
 
+    void ExportDemographics()
+    {
+        if (_analyzedData is null) return;
+        var path = EditorUtility.SaveFilePanel("Export", "", "Demographics", "xlsx");
+
+        using var workbook = new XLWorkbook();
+        var x = workbook.Worksheets.Add("Demographics");
+        var row = x.Row(1);
+        var age = row.Cell(1);
+        var gamingExperience = row.Cell(2);
+        var firstPersonExperience = row.Cell(3);
+        var headphoneUsage = row.Cell(4);
+
+        age.Value = "Age";
+        gamingExperience.Value = "GamingExperience";
+        firstPersonExperience.Value = "FirstPersonExperience";
+        headphoneUsage.Value = "HeadphoneUsage";
+        foreach (var answers in _analyzedData.Select(x => x.answers))
+        {
+            age = age.CellBelow();
+            gamingExperience = gamingExperience.CellBelow();
+            firstPersonExperience = firstPersonExperience.CellBelow();
+            headphoneUsage = headphoneUsage.CellBelow();
+
+            age.Value = answers.age.ToString();
+            gamingExperience.Value = answers.gamingExperience.ToString();
+            firstPersonExperience.Value = answers.firstPersonExperience.ToString();
+            headphoneUsage.Value = answers.headphoneUsage.ToString();
+        }
+
+
+        workbook.SaveAs(path);
+    }
+
+    void ExportNavigation()
+    {
+        if (_analyzedData is null) return;
+
+        var path = EditorUtility.SaveFilePanel("Export", "", "Navigation", "xlsx");
+
+        using var workbook = new XLWorkbook();
+        var x = workbook.Worksheets.Add($"Navigation");
+        var row = x.Row(1);
+
+        foreach (var scene in _analyzedData.SelectMany(d => d.scenarios).GroupBy(s => s.scene))
+        {
+            row.Cell(1).Value = scene.Key;
+            row = row.RowBelow();
+            var numTasks = scene.First().navigationTasks.Count;
+            var audioConfigs = typeof(AudioConfiguration).GetEnumNames();
+
+            // Numbers
+            var cell = row.Cell(1);
+            for (var i = 0; i < numTasks; i++)
+            {
+                var taskIndex = i + 1;
+                foreach (var config in audioConfigs)
+                {
+                    var value = $"{taskIndex} {config}";
+                    cell.Value = value;
+                    cell.Style.Font.Bold = true;
+                    cell = cell.CellRight();
+                }
+
+                cell = cell.CellRight();
+            }
+
+            row = row.RowBelow();
+
+
+            // Values
+            var configCell = row.Cell(1);
+            foreach (var config in scene.GroupBy(s => s.audioConfiguration).OrderBy(s => (int)s.Key))
+            {
+                var participantCell = configCell;
+                foreach (var participant in config)
+                {
+                    var taskCell = participantCell;
+                    foreach (var task in participant.navigationTasks)
+                    {
+                        taskCell.Value = task.Duration.TotalSeconds;
+
+                        const string format = "#,##0.00";
+                        taskCell.Style.NumberFormat.SetFormat(format);
+                        taskCell = taskCell.CellRight(4);
+                    }
+
+                    participantCell = participantCell.CellBelow();
+                }
+
+                configCell = configCell.CellRight();
+            }
+
+            row = row.RowBelow(6);
+        }
+
+        workbook.SaveAs(path);
+    }
+
     void ExportLocalization()
     {
         if (_analyzedData is null) return;
 
+        var path = EditorUtility.SaveFilePanel("Export", "", "Localization", "xlsx");
         using var workbook = new XLWorkbook();
         foreach (var scene in _analyzedData.SelectMany(d => d.scenarios).GroupBy(s => s.scene))
         {
@@ -211,7 +316,7 @@ public class DataAnalysis : EditorWindow
             var cell = row.Cell(1);
             var numTasks = scene.First().localizationTasks.Count;
             var audioConfigs = typeof(AudioConfiguration).GetEnumNames();
-            var otherValuesOffset = (numTasks * (audioConfigs.Length+1) + 1);
+            var otherValuesOffset = (numTasks * (audioConfigs.Length + 1) + 1);
 
             // Numbers
             for (var i = 0; i < numTasks; i++)
@@ -228,6 +333,7 @@ public class DataAnalysis : EditorWindow
                     otherCell.Style.Font.Bold = true;
                     cell = cell.CellRight();
                 }
+
                 cell = cell.CellRight();
             }
 
@@ -262,7 +368,7 @@ public class DataAnalysis : EditorWindow
             }
         }
 
-        workbook.SaveAs("G:/My Drive/Studium/bachelor thesis/results/Localization Results1.xlsx");
+        workbook.SaveAs(path);
     }
 
     void LocalizationGui()
@@ -289,10 +395,6 @@ public class DataAnalysis : EditorWindow
             );
         }).ToArray();
 
-        if (GUILayout.Button("Export To Excel"))
-        {
-            ExportLocalization();
-        }
 
         var allTasksForConfig = tasks.SelectMany(x => x.tasks.Select(task => (x.scenario.audioConfiguration, task)))
             .GroupBy(g => g.audioConfiguration, g => g.task)
@@ -394,17 +496,21 @@ public class DataAnalysis : EditorWindow
             References.PlayerPosition = firstTask.listenerPosition;
 
             var taskDefinition = tasks.First().tasks;
+            var startIndex = _visLocTaskToolbar.IsAll ? 1 : _visLocTaskToolbar.index + 1;
+            var i = startIndex;
             foreach (var task in taskDefinition)
             {
-                MapPin.Create(task.audioPosition, Color.black, 1.0f, new[] { task.playerToAudioPathing });
+                MapPin.CreateNumbered(task.audioPosition, Color.black, 1.3f, i++, true,
+                    new[] { task.playerToAudioPathing });
             }
 
             foreach (var (data, scenario, currentTasks) in tasks)
             {
                 var color = ColorForAudioConfig(scenario.audioConfiguration);
+                i = startIndex;
                 foreach (var task in currentTasks)
                 {
-                    MapPin.Create(task.guessedPosition, color, 0.6f,
+                    MapPin.CreateNumbered(task.guessedPosition, color, 0.8f, i++, false,
                         new[] { task.playerToGuessPathing, task.guessToAudioPathing });
                 }
             }
@@ -421,11 +527,14 @@ public class DataAnalysis : EditorWindow
         var tasks = currentNavigationTasks;
         if (_shouldUpdateVisualization)
         {
+            References.PlayerAndAudioPaused = true;
             MapPin.Clear();
-            foreach (var task in tasks.Values.SelectMany(x => x.Values.First().tasks).Reverse())
+            foreach (var taskDef in tasks.Reverse())
             {
+                var task = taskDef.Value.Values.First().tasks.First();
                 References.PlayerPosition = task.listenerStartPosition;
-                MapPin.Create(task.audioPosition, Color.black, 1f, new[] { task.frames.First().audioPath });
+                MapPin.CreateNumbered(task.audioPosition, Color.black, 1f, taskDef.Key + 1, true,
+                    new[] { task.frames.First().audioPath });
             }
 
             switch (_navVisTypeToolbar.value)
@@ -516,6 +625,7 @@ public class DataAnalysis : EditorWindow
 
         var averages = tasks.Values.SelectMany(t => t)
             .GroupBy(p => p.Key)
+            .OrderBy(p => (int)p.Key)
             .Select(t =>
             {
                 return (config: t.Key,
@@ -643,28 +753,6 @@ public class DataAnalysis : EditorWindow
         /* Visualization */
 
         DataVisGui();
-
-        //        GUILayout.Space(10);
-        // if (GUILayout.Button("Normalisis"))
-        // {
-        //     // 5.2 can still happen under normal circumstances, analyze fr later
-        //     var speed = _data.scenarios.SelectMany(s => s.navigationTasks).SelectMany(nav =>
-        //     {
-        //         var first = nav.frames.FirstOrDefault();
-        //         var prevPosition = first?.position ?? Vector2.zero;
-        //         var prevTime = first?.time ?? 0f;
-        //         return nav.frames.Select(frame =>
-        //         {
-        //             var res = Vector2.Distance(frame.position, prevPosition) / (frame.time - prevTime);
-        //             prevPosition = frame.position;
-        //             prevTime = frame.time;
-        //             return res;
-        //         });
-        //     }).ToList();
-        //
-        //     speed.Sort();
-        //     Debug.Log(speed);
-        // }
     }
 
     void FileSelectionGui()
@@ -690,6 +778,24 @@ public class DataAnalysis : EditorWindow
                         _folderPath = folderPath;
                         _data = dataInFolder;
                         _analyzedData = null;
+
+                        // 5.2 can still happen under normal circumstances, analyze fr later
+                        var speed = _data.SelectMany(s => s.scenarios).SelectMany(s => s.navigationTasks).SelectMany(
+                            nav =>
+                            {
+                                var first = nav.frames.FirstOrDefault();
+                                var prevPosition = first?.position ?? Vector2.zero;
+                                var prevTime = first?.time ?? 0f;
+                                return nav.frames.Select(frame =>
+                                {
+                                    var res = Vector2.Distance(frame.position, prevPosition) /
+                                              (frame.time - prevTime + float.Epsilon);
+                                    if (res > 5.5) throw null;
+                                    prevPosition = frame.position;
+                                    prevTime = frame.time;
+                                    return res;
+                                });
+                            }).ToList();
                     }
                 }
                 catch (Exception e)
@@ -712,54 +818,10 @@ public class DataAnalysis : EditorWindow
         AudioConfiguration.Mixed   => Color.magenta,
         _                          => throw new ArgumentOutOfRangeException(nameof(config), config, null)
     };
-
-    [MenuItem("Audio Study/Export Example Data", false, 1)]
-    public static void ExportExampleData()
-    {
-        JsonData.Export(new StudyData());
-    }
-
-    [MenuItem("Audio Study/Analyze Duration", false, 1)]
-    public static void Duration()
-    {
-        var path = EditorUtility.OpenFilePanel("Select StudyData", "", "json");
-        var data = JsonData.Import(path) ?? throw new Exception("Failed to load data");
-
-        Debug.Log($"Data {path}\n" + string.Join("\n--------------\n",
-            data.scenarios.Select(s =>
-                $"Scenario {s.scene}-{s.audioConfiguration}: {s.Duration().Format()}"
-                + $"\n Navigation   {s.navigationTasks.Duration().Format()} for {s.navigationTasks.Count} positions | avg nav time:   {s.navigationTasks.Average(t => t.Duration()).Format()}"
-                + $"\n Localization {s.localizationTasks.Duration().Format()} for {s.localizationTasks.Count} positions | avg guess time: {s.localizationTasks.Average(t => t.Duration()).Format()}"
-            ))
-        );
-    }
 }
 
 internal static class TaskDuration
 {
-    public static TimeSpan Duration(this LocalizationTask task) =>
-        TimeSpan.FromSeconds(task.endTime - task.startTime);
-
-    public static TimeSpan Duration(this NavigationTask task) =>
-        TimeSpan.FromSeconds(task.endTime - task.startTime);
-
-    public static TimeSpan Duration(this Scenario scenario) =>
-        scenario.navigationTasks.Duration() + scenario.localizationTasks.Duration();
-    //
-    // public static TimeSpan StartTime(this Scenario scenario) =>
-    //     scenario.navigationTasks.FirstOrDefault(t => t.Started())?.startTime ??
-    //     scenario.localizationTasks.FirstOrDefault(t => t.Started())?.startTime ?? 0.0f;
-    //
-    // public static TimeSpan EndTime(this Scenario scenario) =>
-    //     scenario.localizationTasks.LastOrDefault(t => t.Completed())?.endTime ??
-    //     scenario.navigationTasks.LastOrDefault(t => t.Completed())?.endTime ?? 0.0f;
-
-    public static TimeSpan Duration(this List<NavigationTask> tasks) =>
-        tasks.Count == 0 ? TimeSpan.Zero : TimeSpan.FromSeconds(tasks.Last().endTime - tasks.First().startTime);
-
-    public static TimeSpan Duration(this List<LocalizationTask> tasks) =>
-        tasks.Count == 0 ? TimeSpan.Zero : TimeSpan.FromSeconds(tasks.Last().endTime - tasks.First().startTime);
-
     public static TimeSpan Average<TSource>(this IEnumerable<TSource> source, Func<TSource, TimeSpan> func) =>
         TimeSpan.FromSeconds(source.Average(s => func(s).TotalSeconds));
 
@@ -796,112 +858,4 @@ internal static class TaskEfficiency
     }
 }
 
-public static class XLUtils
-{
-    const string ExportPath = "ExampleExport1.xlsx";
-
-    [MenuItem("Audio Study/AnalyzeDemoToExcel", false, 1)]
-    public static void AnalyzeDemoToExcel()
-    {
-        if (JsonData.Import("DemoStudyData.json") is not { } data)
-        {
-            Debug.LogWarning("DemoStudyData.json could not be found");
-            return;
-        }
-
-        var task = data.scenarios.First().navigationTasks.First(); // assume
-        var efficiency = task.Efficiency();
-
-
-        using var workbook = new XLWorkbook();
-        var x = workbook.Worksheets.Add("Sample Sheet");
-        var row = x.Row(1);
-        var c = 0;
-        row.Cell(++c).Value = "Time";
-        row.Cell(++c).Value = "Efficiency";
-        row.Cell(++c).Value = "NumberPaths";
-        row.Cell(++c).Value = "OptimalDistance";
-        foreach (var d in efficiency)
-        {
-            c = 0;
-            row = row.RowBelow();
-            row.Cell(++c).Value = d.frame.time;
-            row.Cell(++c).Value = d.Efficiency;
-            row.Cell(++c).Value = d.frame.audioPath.points.Count;
-            row.Cell(++c).Value = d.frame.audioPath.Length;
-        }
-
-        workbook.SaveAs("DemoStudyData_Efficiency.xlsx");
-    }
-
-    static XLColor TitleColor => XLColor.AshGrey;
-
-    static void SetTitle(this IXLCell cell, string title)
-    {
-        cell.Style.Fill.BackgroundColor = TitleColor;
-        cell.Value = title;
-    }
-
-    static void ExportToExcel(StudyData data)
-    {
-        using var workbook = new XLWorkbook();
-        var x = workbook.Worksheets.Add("Sample Sheet");
-        WriteMeta();
-        WriteNavigationTask();
-
-        workbook.SaveAs(ExportPath);
-
-        void WriteMeta()
-        {
-            x.Cell(1, 1).SetTitle("Date");
-            x.Cell(2, 1).Value = DateTime.Now.ToShortDateString();
-            x.Cell(3, 1).Value = DateTime.Now.ToShortTimeString();
-
-            x.Cell(1, 2).SetTitle("AudioConfiguration");
-            // x.Cell(2, 2).Value = data.audioConfiguration.ToString();
-        }
-
-        void WriteNavigationTask()
-        {
-            const int cNavigationTasksStart = 4;
-            const int cScene = cNavigationTasksStart;
-            const int cTask = cScene + 1;
-            const int cStartTime = cScene + 1;
-            const int cEndTime = cStartTime + 1;
-            const int cAudioPositionX = cEndTime + 1;
-            const int cAudioPositionY = cAudioPositionX + 1;
-            var r = 1;
-            var row = x.Row(r++);
-            row.Cell(cNavigationTasksStart).SetTitle("Navigation");
-
-            row = x.Row(r++);
-            row.Cell(cScene).SetTitle("Scene");
-            row.Cell(cTask).SetTitle("Task");
-            row.Cell(cStartTime).SetTitle("StartTime");
-            row.Cell(cEndTime).SetTitle("EndTime");
-            row.Cell(cAudioPositionX).SetTitle("AudioPosX");
-            row.Cell(cAudioPositionY).SetTitle("AudioPosY");
-
-            foreach (var scenario in data.scenarios)
-            {
-                var taskIndex = 0;
-                foreach (var task in scenario.navigationTasks)
-                {
-                    row = x.Row(r++);
-
-                    row.Cell(cScene).Value = scenario.scene;
-                    row.Cell(cTask).Value = taskIndex++;
-                    row.Cell(cStartTime).Value = task.startTime;
-                    row.Cell(cEndTime).Value = task.endTime;
-                    row.Cell(cAudioPositionX).Value = task.audioPosition.x;
-                    row.Cell(cAudioPositionY).Value = task.audioPosition.y;
-
-                    foreach (var metricsFrame in task.frames)
-                    {
-                    }
-                }
-            }
-        }
-    }
-}
 #endif

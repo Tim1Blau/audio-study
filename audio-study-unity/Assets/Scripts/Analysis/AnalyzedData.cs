@@ -4,9 +4,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using SteamAudio;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Vector3 = UnityEngine.Vector3;
 
 [Serializable]
 public record AnalyzedData
@@ -112,7 +114,6 @@ public static class Analysis
 
         var res = new AnalyzedData { answers = data.answers };
         progress.Scenarios.Index = 0;
-        const float maxMoveSpeed = 5.5f;
         var penalty = 0f;
         foreach (var scenario in data.scenarios)
         {
@@ -157,11 +158,13 @@ public static class Analysis
                 // yield return Path(t.audioPosition, t.listenerPosition, r => aLoc.playerToAudioPathing = r);
             }
 
-            int i = 0;
+            var i = 0;
             foreach (var t in aScenario.localizationTasks)
             {
                 UI.Singleton.screenText.text = $"task {i + 1} / {scenario.localizationTasks.Count}";
-                yield return Path(t.guessedPosition, t.audioPosition, r => t.guessToAudioPathing = r);
+                // yield return Path(t.guessedPosition, t.audioPosition, r => t.guessToAudioPathing = r,
+                //     snappedAudioPos => t.guessedPosition = snappedAudioPos);
+                t.guessToAudioPathing = new AudioPath{ isOccluded = true, points = { t.guessedPosition, t.audioPosition } };
                 i++;
                 progress.LocalizationTasks.Index++;
                 progress.OnUpdate?.Invoke();
@@ -173,12 +176,12 @@ public static class Analysis
                 {
                     listenerStartPosition = nav.listenerStartPosition,
                     audioPosition = nav.audioPosition,
-                    
+
                     startTime = nav.startTime,
-                    endTime = nav.endTime, 
-                    frames = nav.frames, 
-                    
-                    audioConfiguration = scenario.audioConfiguration, 
+                    endTime = nav.endTime,
+                    frames = nav.frames,
+
+                    audioConfiguration = scenario.audioConfiguration,
                 };
                 navigation.startTime += penalty;
                 var first = navigation.frames.First();
@@ -186,20 +189,26 @@ public static class Analysis
                 var prevTime = first?.time ?? 0f;
                 var hasStartedMoving = false;
                 const float notStartedMovingTimeReduction = 0.9f;
+                const float maxMoveSpeed = 5.5f;
                 foreach (var frame in navigation.frames)
                 {
                     var deltaTime = frame.time - prevTime;
-                    prevTime = frame.time;
-                    frame.time += penalty;
+
+                    if (deltaTime < 0) 
+                        throw new Exception("Negative delta time, data is corrupted");
+
                     var distance = Vector2.Distance(prevPosition, frame.position);
-                    if (distance > (maxMoveSpeed) * deltaTime)
+                    if (distance > maxMoveSpeed * deltaTime)
                     {
-                        penalty += distance / Player.movementSpeed;
+                        var penaltyAdded = distance / Player.movementSpeed - deltaTime;
+                        penalty += penaltyAdded;
+                        if(penaltyAdded < 0) throw new Exception("penalty added is negative");
+                        if(penaltyAdded > 0.15) throw new Exception("penalty added is too large");
                     }
 
                     if (!hasStartedMoving)
                     {
-                        if (distance > 1.0f)
+                        if (distance > 1f * deltaTime)
                         {
                             hasStartedMoving = true;
                         }
@@ -208,11 +217,17 @@ public static class Analysis
                             penalty -= deltaTime * notStartedMovingTimeReduction;
                         }
                     }
-
+                    
+                    
                     prevPosition = frame.position;
+                    prevTime = frame.time;
+                    frame.time += penalty;
                 }
 
                 navigation.endTime += penalty;
+                if(navigation.startTime > navigation.endTime)
+                    throw new Exception("Duration is negative");
+                
                 aScenario.navigationTasks.Add(navigation);
             }
 
@@ -230,23 +245,38 @@ public static class Analysis
         result.Invoke(res);
         yield break;
 
-        IEnumerator Path(Vector2 audio, Vector2 listener, Action<AudioPath> result)
+        IEnumerator Path(Vector2 audio, Vector2 listener, Action<AudioPath> result,
+            Action<Vector2>? snappedAudioPosition)
         {
             References.AudioPosition = audio;
             References.PlayerPosition = listener;
             yield return new WaitForNextFrameUnit();
             var res = new AudioPath { isOccluded = true };
-            var start = Time.realtimeSinceStartup;
             yield return PathingRecorder.WaitForPathingData(r => res = r);
-            while (res.isOccluded && start + 0.5f > Time.realtimeSinceStartup)
-            {
-                UI.Singleton.screenText.text = "Occluded, trying again";
-                yield return PathingRecorder.WaitForPathingData(r => res = r);
-            }
-
             if (res.isOccluded)
             {
-                Debug.LogWarning("Still Occluded after retries");
+                Debug.LogWarning("No path to audio position, snapping position");
+                audio = References.Singleton.probeBatch.ProbeSpheres.Select(s => Common.ConvertVector(s.center).XZ())
+                    .OrderBy(s => Vector3.Distance(audio, s)).First();
+
+                References.AudioPosition = audio;
+                snappedAudioPosition?.Invoke(audio);
+                yield return new WaitForNextFrameUnit();
+
+                yield return PathingRecorder.WaitForPathingData(r => res = r);
+
+                var start = Time.realtimeSinceStartup;
+                while (res.isOccluded && start + 0.5f > Time.realtimeSinceStartup)
+                {
+                    Debug.LogWarning("Retry Occlusion");
+                    UI.Singleton.screenText.text = "Occluded, trying again";
+                    yield return PathingRecorder.WaitForPathingData(r => res = r);
+                }
+
+                if (res.isOccluded)
+                {
+                    Debug.LogError("Bug: still no path to audio position");
+                }
             }
 
             result.Invoke(res);

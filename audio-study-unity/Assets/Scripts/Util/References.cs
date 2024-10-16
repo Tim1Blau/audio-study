@@ -26,6 +26,7 @@ public class References : SingletonBehaviour<References>
     [SerializeField] public MeshFilter roomMeshFilter;
     [SerializeField] public MeshCollider roomMeshCollider;
     [SerializeField] public SteamAudioStaticMesh steamAudioStaticMesh;
+    [SerializeField] public GameObject numberedMapPinPrefab;
 
     public static Player Player => Singleton.player;
 
