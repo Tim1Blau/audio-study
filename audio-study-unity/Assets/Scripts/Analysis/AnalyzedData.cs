@@ -13,6 +13,7 @@ using Vector3 = UnityEngine.Vector3;
 [Serializable]
 public record AnalyzedData
 {
+    public int id;
     public QuestionData answers = new();
     public List<AnalyzedScenario> scenarios = new();
 }
@@ -29,6 +30,7 @@ public record AnalyzedScenario
 [Serializable]
 public record AnalyzedLocalizationTask
 {
+    public int dataID;
     public Vector2 listenerPosition;
     public Vector2 audioPosition;
     public float startTime = -1;
@@ -99,7 +101,7 @@ public static class Analysis
         var res = new List<AnalyzedData>();
         foreach (var d in data)
         {
-            yield return d.Analyze(res.Add, progress);
+            yield return d.Analyze(progress.Datas.Index + 1, res.Add, progress);
             progress.Datas.Index++;
             progress.OnUpdate?.Invoke();
         }
@@ -107,12 +109,12 @@ public static class Analysis
         result.Invoke(res.ToArray());
     }
 
-    public static IEnumerator Analyze(this StudyData data, Action<AnalyzedData> result, Progress? progress = null)
+    public static IEnumerator Analyze(this StudyData data, int id, Action<AnalyzedData> result, Progress? progress = null)
     {
         progress ??= new Progress();
         progress.Scenarios.Count = data.scenarios.Count;
 
-        var res = new AnalyzedData { answers = data.answers };
+        var res = new AnalyzedData { id = id, answers = data.answers };
         progress.Scenarios.Index = 0;
         var penalty = 0f;
         foreach (var scenario in data.scenarios)
@@ -136,6 +138,7 @@ public static class Analysis
                 var playerToActual = t.audioPosition - t.listenerPosition;
                 var aLoc = new AnalyzedLocalizationTask
                 {
+                    dataID = res.id,
                     listenerPosition = t.listenerPosition,
                     audioPosition = t.audioPosition,
                     startTime = t.startTime,
@@ -162,9 +165,8 @@ public static class Analysis
             foreach (var t in aScenario.localizationTasks)
             {
                 UI.Singleton.screenText.text = $"task {i + 1} / {scenario.localizationTasks.Count}";
-                // yield return Path(t.guessedPosition, t.audioPosition, r => t.guessToAudioPathing = r,
-                //     snappedAudioPos => t.guessedPosition = snappedAudioPos);
-                t.guessToAudioPathing = new AudioPath{ isOccluded = true, points = { t.guessedPosition, t.audioPosition } };
+                yield return Path(t.guessedPosition, t.audioPosition, r => t.guessToAudioPathing = r,
+                    snappedAudioPos => t.guessedPosition = snappedAudioPos);
                 i++;
                 progress.LocalizationTasks.Index++;
                 progress.OnUpdate?.Invoke();
@@ -194,7 +196,7 @@ public static class Analysis
                 {
                     var deltaTime = frame.time - prevTime;
 
-                    if (deltaTime < 0) 
+                    if (deltaTime < 0)
                         throw new Exception("Negative delta time, data is corrupted");
 
                     var distance = Vector2.Distance(prevPosition, frame.position);
@@ -202,8 +204,8 @@ public static class Analysis
                     {
                         var penaltyAdded = distance / Player.movementSpeed - deltaTime;
                         penalty += penaltyAdded;
-                        if(penaltyAdded < 0) throw new Exception("penalty added is negative");
-                        if(penaltyAdded > 0.15) throw new Exception("penalty added is too large");
+                        if (penaltyAdded < 0) throw new Exception("penalty added is negative");
+                        if (penaltyAdded > 0.15) throw new Exception("penalty added is too large");
                     }
 
                     if (!hasStartedMoving)
@@ -217,17 +219,17 @@ public static class Analysis
                             penalty -= deltaTime * notStartedMovingTimeReduction;
                         }
                     }
-                    
-                    
+
+
                     prevPosition = frame.position;
                     prevTime = frame.time;
                     frame.time += penalty;
                 }
 
                 navigation.endTime += penalty;
-                if(navigation.startTime > navigation.endTime)
+                if (navigation.startTime > navigation.endTime)
                     throw new Exception("Duration is negative");
-                
+
                 aScenario.navigationTasks.Add(navigation);
             }
 

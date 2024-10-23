@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using Scene = UnityEngine.SceneManagement.Scene;
 using Vector3 = UnityEngine.Vector3;
 
+/// Path locations for the assets exported by SteamAudio for the current scene 
 public static class ExportPaths
 {
     public static string Scene => SceneManager.GetActiveScene().ExportPath("_Scene.asset");
@@ -16,6 +17,7 @@ public static class ExportPaths
         string.Join(null,scene.path[..^(".asset".Length + scene.name.Length)], "Export/", scene.name, ending);
 }
 
+/// Singleton providing central access to scripts attached to the Study prefab
 public class References : SingletonBehaviour<References>
 {
     [SerializeField] public SteamAudioSource steamAudioSource;

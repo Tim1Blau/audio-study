@@ -15,6 +15,10 @@ public class SceneSetup : MonoBehaviour
 }
 
 #if UNITY_EDITOR
+/// Provides an additional inspector button to <see cref="SceneSetup"/> to quickly setup new scenes with the set mesh.
+/// 1. Sets the displayed and collision mesh in the study prefab
+/// 2. Exports the SteamAudio Scene
+/// 3. Generates SteamAudio Probes
 [CustomEditor(typeof(SceneSetup))]
 public class SceneSetupEditor : Editor
 {
@@ -35,34 +39,6 @@ public class SceneSetupEditor : Editor
 
         if(Application.isPlaying)
             Study.AudioConfig = (AudioConfiguration)EditorGUILayout.EnumPopup("Audio Configuration", Study.AudioConfig);
-    }
-
-    static void VisualizeNavigation()
-    {
-        var studySettings = FindObjectOfType<StudySettings>();
-        var tasks = studySettings.GenerateNavigationTasks();
-        int index = 0;
-        foreach (var task in tasks)
-        {
-            var c = (float)++index / tasks.Count;
-            var color = new Color(c, c, c);
-            Debug.DrawLine(task.listenerStartPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
-        }
-        Debug.Log("Visualized Navigation");
-    }
-
-    static void VisualizeLocalization()
-    {
-        var studySettings = FindObjectOfType<StudySettings>();
-        var tasks = studySettings.GenerateLocalizationTasks();
-        int index = 0;
-        foreach (var task in tasks)
-        {
-            var c = (float)++index / tasks.Count;
-            var color = new Color(c, c, c);
-            Debug.DrawLine(task.listenerPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
-        }
-        Debug.Log("Visualized Localization");
     }
 
     void SetupScene()
@@ -94,7 +70,7 @@ public class SceneSetupEditor : Editor
         Log("Set Mesh");
     }
 
-    void ExportScene()
+    static void ExportScene()
     {
         var scene = SceneManager.GetActiveScene();
 
@@ -105,7 +81,7 @@ public class SceneSetupEditor : Editor
         Log("Exported Scene Asset");
     }
 
-    void GenerateProbes()
+    static void GenerateProbes()
     {
         var scene = SceneManager.GetActiveScene();
 
@@ -126,12 +102,40 @@ public class SceneSetupEditor : Editor
         Log("Generated Probes");
     }
 
-    SerializedData CreateAsset(string path)
+    static SerializedData CreateAsset(string path)
     {
         var asset = CreateInstance<SerializedData>();
         AssetDatabase.DeleteAsset(path);
         AssetDatabase.CreateAsset(asset, path);
         return asset;
+    }
+    
+    static void VisualizeNavigation()
+    {
+        var studySettings = FindObjectOfType<StudySettings>();
+        var tasks = studySettings.GenerateNavigationTasks();
+        int index = 0;
+        foreach (var task in tasks)
+        {
+            var c = (float)++index / tasks.Count;
+            var color = new Color(c, c, c);
+            Debug.DrawLine(task.listenerStartPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
+        }
+        Debug.Log("Visualized Navigation");
+    }
+
+    static void VisualizeLocalization()
+    {
+        var studySettings = FindObjectOfType<StudySettings>();
+        var tasks = studySettings.GenerateLocalizationTasks();
+        int index = 0;
+        foreach (var task in tasks)
+        {
+            var c = (float)++index / tasks.Count;
+            var color = new Color(c, c, c);
+            Debug.DrawLine(task.listenerPosition.XZ(1), task.audioPosition.XZ(1), color, 3.0f);
+        }
+        Debug.Log("Visualized Localization");
     }
 }
 #endif

@@ -6,24 +6,43 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// Persistent Singleton spawned by StudySettings.Start() 
+/// Persistent Singleton spawned by StudySettings.Start()
+/// Central class of the study procedure.
+/// Starts the main study coroutine.
 public class Study : MonoBehaviour
 {
-    public StudyData data = new();
-
     const string TutorialScene = "Tutorial";
 
-    static bool _instantiated;
-
-    string _exportPath;
-
-    public static void Initialize()
+    public StudyData data = new();
+    
+    public static AudioConfiguration AudioConfig
     {
-        if (_instantiated) return;
-        _instantiated = true;
-        DontDestroyOnLoad(new GameObject(nameof(Study)).AddComponent<Study>());
+        get
+        {
+            var audio = References.Singleton.steamAudioSource;
+            return (audio.transmission, audio.pathingMixLevel) switch
+            {
+                (true, 0)  => AudioConfiguration.Basic,
+                (false, 1) => AudioConfiguration.Pathing,
+                (true, 1)  => AudioConfiguration.Mixed,
+                _          => AudioConfiguration.Basic,
+            };
+        }
+        set
+        {
+            if (value == AudioConfig) return;
+            var audio = References.Singleton.steamAudioSource;
+            (audio.transmission, audio.transmissionLow, audio.pathingMixLevel) = value switch
+            {
+                AudioConfiguration.Basic   => (transmission: true, transmissionLow: 1, pathing: 0),
+                AudioConfiguration.Pathing => (transmission: false, transmissionLow: 0, pathing: 1),
+                AudioConfiguration.Mixed   => (transmission: true, transmissionLow: 0.4f, pathing: 1),
+                _                          => throw new ArgumentOutOfRangeException()
+            };
+        }
     }
-
+    
+    IEnumerator Start() => DoStudy();
 
     void Update()
     {
@@ -37,15 +56,10 @@ public class Study : MonoBehaviour
 #endif
     }
 
-    void Export(string stage) => JsonData.Export(data, _exportPath + " " + stage);
-
-    IEnumerator Start()
-    {
-        return DoStudy();
-    }
-
     IEnumerator DoStudy()
     {
+        SceneManager.LoadScene(TutorialScene);
+        yield return new WaitForNextFrameUnit();
         References.AudioPaused = true;
         References.Player.canMove = false;
         /*------------------------------------------------*/
@@ -132,32 +146,17 @@ public class Study : MonoBehaviour
         /*------------------------------------------------*/
         Export($"{scene}-{(int)audioConfiguration}");
     }
-
-    public static AudioConfiguration AudioConfig
+    
+    string _exportPath;
+    void Export(string stage) => JsonData.Export(data, _exportPath + " " + stage);
+    
+    
+    static bool _instantiated;
+    public static void Initialize()
     {
-        get
-        {
-            var audio = References.Singleton.steamAudioSource;
-            return (audio.transmission, audio.pathingMixLevel) switch
-            {
-                (true, 0)  => AudioConfiguration.Basic,
-                (false, 1) => AudioConfiguration.Pathing,
-                (true, 1)  => AudioConfiguration.Mixed,
-                _          => AudioConfiguration.Basic,
-            };
-        }
-        set
-        {
-            if (value == AudioConfig) return;
-            var audio = References.Singleton.steamAudioSource;
-            (audio.transmission, audio.transmissionLow, audio.pathingMixLevel) = value switch
-            {
-                AudioConfiguration.Basic   => (transmission: true, transmissionLow: 1, pathing: 0),
-                AudioConfiguration.Pathing => (transmission: false, transmissionLow: 0, pathing: 1),
-                AudioConfiguration.Mixed   => (transmission: true, transmissionLow: 0.4f, pathing: 1),
-                _                          => throw new ArgumentOutOfRangeException()
-            };
-        }
+        if (_instantiated) return;
+        _instantiated = true;
+        DontDestroyOnLoad(new GameObject(nameof(Study)).AddComponent<Study>());
     }
 }
 
